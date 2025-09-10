@@ -1,0 +1,60 @@
+.card {
+  border-radius: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151; /* gray-700 */
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb; /* primary blue */
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.statSub {
+  font-size: 0.75rem;
+  color: #9ca3af; /* gray-400 */
+  margin-top: 0.25rem;
+}
+
+.chartWrapper {
+  height: 200px;
+  width: 100%;
+}

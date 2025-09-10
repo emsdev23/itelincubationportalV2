@@ -1,0 +1,108 @@
+.card {
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb; /* neutral border */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Header (title + icon) */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4b5563; /* gray-600 */
+}
+
+.icon {
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* Main value */
+.value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827; /* gray-900 */
+}
+
+/* Subtitle */
+.subtitle {
+  font-size: 0.8rem;
+  color: #6b7280; /* gray-500 */
+  margin-top: 0.25rem;
+}
+
+/* Trend */
+.trend {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.trendPositive {
+  color: #10b981; /* green-500 */
+}
+
+.trendNegative {
+  color: #ef4444; /* red-500 */
+}
+
+.trendText {
+  margin-left: 0.25rem;
+}
+
+/* ======================
+   Variants
+====================== */
+.default {
+  border-left: 4px solid #6b7280; /* gray-500 */
+}
+
+.primary {
+  border-left: 4px solid #3b82f6; /* blue-500 */
+}
+
+.success {
+  border-left: 4px solid #10b981; /* green-500 */
+}
+
+.warning {
+  border-left: 4px solid #f59e0b; /* amber-500 */
+}
+
+/* Icon background for variants */
+.primary .icon {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.success .icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.warning .icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.default .icon {
+  background: #f3f4f6; /* gray-100 */
+  color: #6b7280;
+}
