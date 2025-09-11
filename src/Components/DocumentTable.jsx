@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styles from "./DocumentTable.module.css";
+import { Link, NavLink } from "react-router-dom";
 
 const mockData = [
   {
@@ -167,7 +168,10 @@ export default function DocumentTable() {
                   </span>
                 </td>
                 <td className={styles.textRight}>
-                  <button className={styles.buttonSmall}>View</button>
+                  <NavLink to="./startup/Dashboard">
+                    {/* NavLink */}
+                    <button className={styles.buttonSmall}>View</button>
+                  </NavLink>
                 </td>
               </tr>
             ))}

@@ -1,109 +1,257 @@
 .container {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  padding: 2rem;
+  font-family: sans-serif;
 }
 
-.profileCard {
+/* Header Card */
+.headerCard {
+  position: relative;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, #4f46e5, #3b82f6);
+  color: white;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.headerOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2rem;
+}
+.headerContent {
+  position: relative;
+  z-index: 10;
+}
+.headerFlex {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
+  gap: 2rem;
+}
+.avatarWrapper {
+  position: relative;
+}
+.avatarImage {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover;
+}
+.avatarStatus {
+  position: absolute;
+  bottom: -0.25rem;
+  right: -0.25rem;
+  background: #10b981;
+  border-radius: 50%;
+  padding: 0.25rem;
+}
+.headerBadges {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.headerBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
 }
 
-.logo {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
+/* Buttons */
+.buttonPrimary {
+  background: #4f46e5;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+.buttonOutline {
+  background: transparent;
+  border: 2px solid #4f46e5;
+  color: #4f46e5;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
 }
 
-.companyName {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
+/* Stats Grid */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
-
-.statCard {
-  background: white;
-  border: 1px solid #e5e7eb;
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
+.card {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1rem;
+  padding: 1rem;
 }
-
-.statCard h3 {
-  font-size: 1.5rem;
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.cardTitle {
+  font-weight: 600;
+  color: #1f2937;
+}
+.cardContent {
+  font-size: 2rem;
   font-weight: bold;
-  color: #2563eb;
 }
 
-.tableCard {
-  background: white;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+/* Progress */
+.progressBarContainer {
+  width: 100%;
+  height: 1rem;
+  background: #e5e7eb;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 0.5rem;
+  transition: width 0.3s ease;
+}
+.progressStats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.progressStat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.progressDot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+}
+.progressApproved .progressDot {
+  background: #10b981;
+}
+.progressPending .progressDot {
+  background: #f59e0b;
+}
+.progressOverdue .progressDot {
+  background: #ef4444;
 }
 
-.sectionTitle {
-  font-weight: bold;
-  margin-bottom: 12px;
+/* Table */
+/* Make table full screen */
+/* Full screen documents table */
+.documentsTableFull {
+  width: 100vw; /* full viewport width */
+  margin-left: calc(-50vw + 50%); /* center table relative to viewport */
+  margin-top: 2rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 1rem 2rem;
+  overflow-x: auto;
 }
 
-.table {
+/* Table styling */
+.documentsTableFull table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* prevent columns from shrinking too much */
 }
 
-.table th {
+.documentsTableFull th,
+.documentsTableFull td {
+  padding: 0.75rem 1rem;
   text-align: left;
-  padding: 12px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  min-width: 150px; /* ensures columns don’t get too narrow */
 }
 
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+.documentsTableFull th:last-child,
+.documentsTableFull td:last-child {
+  text-align: right;
 }
 
-.statusUploaded {
-  color: green;
-  font-weight: bold;
+.tableRow:hover {
+  background: rgba(79, 70, 229, 0.05);
 }
 
-.statusPending {
-  color: orange;
-  font-weight: bold;
+/* Status badges */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badgeApproved {
+  background: #d1fae5;
+  color: #10b981;
+}
+.badgePending {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+.badgeOverdue {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
-.statusOverdue {
-  color: red;
-  font-weight: bold;
+/* Status icons */
+.iconApproved {
+  color: #10b981;
+  width: 1rem;
+  height: 1rem;
+}
+.iconPending {
+  color: #f59e0b;
+  width: 1rem;
+  height: 1rem;
+}
+.iconOverdue {
+  color: #ef4444;
+  width: 1rem;
+  height: 1rem;
 }
 
-.uploadBtn {
-  background: #2563eb;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
+/* Modal */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modalContent {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 30rem;
+  max-width: 90%;
+}
+.dragDropArea {
+  border: 2px dashed #4f46e5;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  color: #4f46e5;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
-
-.viewBtn {
-  background: #6b7280;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+.dragDropArea:hover {
+  background: rgba(79, 70, 229, 0.05);
 }

@@ -1,115 +1,323 @@
-import React from "react";
+import { useState } from "react";
 import styles from "./StartupDashboard.module.css";
+import companyLogo from "../../Images/FarmlandLogo.png";
+import {
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  FileText,
+  Upload,
+  Calendar,
+  Users,
+  Building,
+  TrendingUp,
+} from "lucide-react";
 
-export default function StartupDashboard({ company }) {
-  // Example company data (replace with props / API data)
-  const companyData = {
-    logo: "/logos/fintechx.png",
-    name: "FinTechX",
-    founder: "John Doe",
-    registeredDate: "2024-02-15",
-    fundingStage: "Seed A",
-    documents: [
-      {
-        id: 1,
-        name: "Incorporation Certificate",
-        status: "Uploaded",
-        uploadedDate: "2024-03-01",
-      },
-      { id: 2, name: "Tax Compliance", status: "Pending", uploadedDate: null },
-      {
-        id: 3,
-        name: "Financial Report Q1",
-        status: "Uploaded",
-        uploadedDate: "2024-04-10",
-      },
-      { id: 4, name: "IP Agreement", status: "Overdue", uploadedDate: null },
-    ],
+const StartupDashboard = () => {
+  const [documents, setDocuments] = useState([
+    {
+      id: 1,
+      name: "Certificate of Incorporation",
+      status: "approved",
+      uploadDate: "2024-01-15",
+      dueDate: "2024-02-15",
+    },
+    {
+      id: 2,
+      name: "Business Plan",
+      status: "pending",
+      uploadDate: "2024-01-20",
+      dueDate: "2024-02-20",
+    },
+    {
+      id: 3,
+      name: "Financial Statements",
+      status: "overdue",
+      uploadDate: null,
+      dueDate: "2024-01-30",
+    },
+    {
+      id: 4,
+      name: "Tax Registration",
+      status: "approved",
+      uploadDate: "2024-01-10",
+      dueDate: "2024-02-10",
+    },
+    {
+      id: 5,
+      name: "Founder Agreements",
+      status: "pending",
+      uploadDate: "2024-01-25",
+      dueDate: "2024-02-25",
+    },
+  ]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const totalDocuments = documents.length;
+  const approvedDocuments = documents.filter(
+    (d) => d.status === "approved"
+  ).length;
+  const pendingDocuments = documents.filter(
+    (d) => d.status === "pending"
+  ).length;
+  const overdueDocuments = documents.filter(
+    (d) => d.status === "overdue"
+  ).length;
+  const completionRate = (approvedDocuments / totalDocuments) * 100;
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "approved":
+        return (
+          <span className={`${styles.badge} ${styles.badgeApproved}`}>
+            Submitted
+          </span>
+        );
+      case "pending":
+        return (
+          <span className={`${styles.badge} ${styles.badgePending}`}>
+            Pending
+          </span>
+        );
+      case "overdue":
+        return (
+          <span className={`${styles.badge} ${styles.badgeOverdue}`}>
+            Overdue
+          </span>
+        );
+      default:
+        return <span className={styles.badge}>Unknown</span>;
+    }
   };
 
-  const totalDocs = companyData.documents.length;
-  const pendingDocs = companyData.documents.filter(
-    (d) => d.status === "Pending"
-  ).length;
-  const overdueDocs = companyData.documents.filter(
-    (d) => d.status === "Overdue"
-  ).length;
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className={styles.iconApproved} />;
+      case "pending":
+        return <Clock className={styles.iconPending} />;
+      case "overdue":
+        return <AlertCircle className={styles.iconOverdue} />;
+      default:
+        return <FileText className={styles.iconDefault} />;
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
 
   return (
     <div className={styles.container}>
-      {/* Company Info Card */}
-      <div className={styles.profileCard}>
-        <img src={companyData.logo} alt="logo" className={styles.logo} />
-        <div>
-          <h2 className={styles.companyName}>{companyData.name}</h2>
-          <p>
-            Founder: <span>{companyData.founder}</span>
-          </p>
-          <p>
-            Registered: <span>{companyData.registeredDate}</span>
-          </p>
-          <p>
-            Funding Stage: <span>{companyData.fundingStage}</span>
-          </p>
+      {/* Header */}
+      <div className={styles.headerCard}>
+        <div className={styles.headerOverlay}></div>
+        <div className={styles.headerContent}>
+          <div className={styles.headerFlex}>
+            <div className={styles.avatarWrapper}>
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                className={styles.avatarImage}
+              />
+              <div className={styles.avatarStatus}>
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold mb-2">TechVenture Inc.</h1>
+              <div className={styles.headerBadges}>
+                <div className={styles.headerBadge}>
+                  <Users className="h-4 w-4" /> Founded by Sarah Johnson
+                </div>
+                <div className={styles.headerBadge}>
+                  <Calendar className="h-4 w-4" /> Registered: Jan 15, 2024
+                </div>
+                <div className={styles.headerBadge}>
+                  <TrendingUp className="h-4 w-4" /> Series A Funding
+                </div>
+              </div>
+            </div>
+            <br />
+          </div>
+        </div>
+        <div className="ml-auto">
+          <button className={styles.buttonPrimary}>
+            <Building className="h-4 w-4 mr-2" /> View Company Profile
+          </button>
         </div>
       </div>
 
-      {/* Document Stats */}
+      {/* Stats Cards */}
       <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <h3>{totalDocs}</h3>
-          <p>Total Documents</p>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>Total Documents</div>
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <div className={styles.cardContent}>{totalDocuments}</div>
         </div>
-        <div className={styles.statCard}>
-          <h3>{pendingDocs}</h3>
-          <p>Pending</p>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>Submitted</div>
+            <CheckCircle className={styles.iconApproved} />
+          </div>
+          <div className={styles.cardContent}>{approvedDocuments}</div>
         </div>
-        <div className={styles.statCard}>
-          <h3>{overdueDocs}</h3>
-          <p>Overdue</p>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>Pending </div>
+            <Clock className={styles.iconPending} />
+          </div>
+          <div className={styles.cardContent}>{pendingDocuments}</div>
+        </div>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>Overdue</div>
+            <AlertCircle className={styles.iconOverdue} />
+          </div>
+          <div className={styles.cardContent}>{overdueDocuments}</div>
+        </div>
+      </div>
+
+      {/* Progress */}
+      <div className={styles.card}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <h2 className="text-xl font-bold mb-2">
+            Document Updatation Progress
+          </h2>
+          <button
+            className={styles.buttonPrimary}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" /> Add Document
+          </button>
+        </div>
+
+        <p className="text-gray-600 mb-2">
+          Complete your registration by submitting all required documents
+        </p>
+        <br />
+        {/* <div className="flex justify-between mb-1">
+          <span>Overall Completion</span>
+          <span>{Math.round(completionRate)}%</span>
+        </div> */}
+        <div className={styles.progressBarContainer}>
+          <div
+            className={styles.progressBar}
+            style={{
+              width: `${completionRate}%`,
+              textAlign: "center",
+              color: "#fff",
+              fontWeight: "bold",
+            }}
+          >
+            {Math.round(completionRate)}%
+          </div>
+        </div>
+        <div className={styles.progressStats}>
+          <div className={`${styles.progressStat} ${styles.progressApproved}`}>
+            <div className={styles.progressDot}></div>
+            <div>{approvedDocuments} Approved</div>
+          </div>
+          <div className={`${styles.progressStat} ${styles.progressPending}`}>
+            <div className={styles.progressDot}></div>
+            <div>{pendingDocuments} Pending</div>
+          </div>
+          <div className={`${styles.progressStat} ${styles.progressOverdue}`}>
+            <div className={styles.progressDot}></div>
+            <div>{overdueDocuments} Overdue</div>
+          </div>
         </div>
       </div>
 
       {/* Documents Table */}
-      <div className={styles.tableCard}>
-        <h3 className={styles.sectionTitle}>Company Documents</h3>
-        <table className={styles.table}>
+      <div className={styles.documentsTableFull}>
+        <div className="flex justify-between mb-4">
+          {/* <h2 className="text-xl font-bold">Document Management</h2> */}
+          {/* <button
+            className={styles.buttonPrimary}
+            onClick={() => setIsModalOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" /> Add Document
+          </button> */}
+        </div>
+        <table>
           <thead>
-            <tr>
+            <tr className="bg-gray-200">
               <th>Document Name</th>
               <th>Status</th>
               <th>Upload Date</th>
-              <th>Action</th>
+              <th>Due Date</th>
+              <th>Actions</th>
+              {/* <th></th> */}
             </tr>
           </thead>
           <tbody>
-            {companyData.documents.map((doc) => (
-              <tr key={doc.id}>
-                <td>{doc.name}</td>
-                <td
-                  className={
-                    doc.status === "Uploaded"
-                      ? styles.statusUploaded
-                      : doc.status === "Pending"
-                      ? styles.statusPending
-                      : styles.statusOverdue
-                  }
-                >
-                  {doc.status}
+            {documents.map((doc) => (
+              <tr key={doc.id} className={styles.tableRow}>
+                <td className="flex items-center gap-2">
+                  {getStatusIcon(doc.status)} {doc.name}
                 </td>
-                <td>{doc.uploadedDate || "-"}</td>
-                <td>
-                  {doc.status === "Pending" ? (
-                    <button className={styles.uploadBtn}>Upload</button>
-                  ) : (
-                    <button className={styles.viewBtn}>View</button>
-                  )}
+                <td>{getStatusBadge(doc.status)}</td>
+                <td>{doc.uploadDate || <em>Not uploaded</em>}</td>
+                <td>{doc.dueDate}</td>
+                <td className="text-right">
+                  <button className={styles.buttonPrimary}>View Doc</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Add Document Modal */}
+      {isModalOpen && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalContent}>
+            <h3 className="text-lg font-bold mb-2">Upload Document</h3>
+            <div
+              className={styles.dragDropArea}
+              onClick={() => document.getElementById("fileInput").click()}
+            >
+              <p>Drag & drop file here or click to select</p>
+              <input
+                type="file"
+                id="fileInput"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                className={styles.buttonOutline}
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.buttonPrimary}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedFile(null);
+                }}
+              >
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default StartupDashboard;
