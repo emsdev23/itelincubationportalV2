@@ -5,53 +5,53 @@ import { Link, NavLink } from "react-router-dom";
 const mockData = [
   {
     id: "1",
-    companyName: "MedTech Solutions",
+    companyName: "Farmland Industries",
     documentType: "Business Plan",
     submissionDate: "2024-01-15",
     dueDate: "2024-01-20",
     status: "submitted",
     founder: "Dr. Sarah Johnson",
-    stage: "seed-a",
+    stage: "Series-a",
   },
   {
     id: "2",
-    companyName: "EmbeddedAI",
+    companyName: "Zealev DC-Tech Private Limited",
     documentType: "Financial Report Q4",
     submissionDate: "-",
     dueDate: "2024-01-18",
     status: "overdue",
     founder: "Alex Chen",
-    stage: "pre-seed",
+    stage: "pre-Series",
   },
   {
     id: "3",
-    companyName: "ResearchBot",
+    companyName: "Shabd Intelligence Pvt. Ltd",
     documentType: "Compliance Certificate",
     submissionDate: "-",
     dueDate: "2024-01-25",
     status: "pending",
     founder: "Prof. Maria Garcia",
-    stage: "seed-b",
+    stage: "Series-b",
   },
   {
     id: "4",
-    companyName: "FinFlow",
+    companyName: "Inter-Cosmos",
     documentType: "IP Documentation",
     submissionDate: "2024-01-10",
     dueDate: "2024-01-15",
     status: "approved",
     founder: "James Wilson",
-    stage: "seed-a",
+    stage: "Series-a",
   },
   {
     id: "5",
-    companyName: "EduInnovate",
+    companyName: "AIPsychi Pvt. Ltd.",
     documentType: "Legal Compliance",
     submissionDate: "-",
     dueDate: "2024-01-22",
     status: "pending",
     founder: "Lisa Zhang",
-    stage: "pre-seed",
+    stage: "pre-Series",
   },
 ];
 
@@ -112,9 +112,9 @@ export default function DocumentTable() {
           className={styles.select}
         >
           <option value="all">All Stages</option>
-          <option value="pre-seed">Pre-Seed</option>
-          <option value="seed-a">Seed A</option>
-          <option value="seed-b">Seed B</option>
+          <option value="pre-Series">Pre-Series</option>
+          <option value="Series-a">Series A</option>
+          <option value="Series-b">Series B</option>
         </select>
       </div>
 
@@ -123,12 +123,15 @@ export default function DocumentTable() {
           <thead>
             <tr>
               <th>Company</th>
-              <th>Document Type</th>
+              <th>Document Category</th>
+
               <th>Founder</th>
               <th>Stage</th>
               <th>Submission Date</th>
               <th>Due Date</th>
               <th>Status</th>
+
+              {/* <th>Document Sub Category</th> */}
               <th className={styles.textRight}>Actions</th>
             </tr>
           </thead>

@@ -11,7 +11,7 @@
   border-radius: 2rem;
   background: linear-gradient(90deg, #4f46e5, #3b82f6);
   color: white;
-  padding: 2rem;
+  padding: 2rem 0.5rem;
   margin-bottom: 2rem;
   overflow: hidden;
 }
@@ -254,4 +254,68 @@
 }
 .dragDropArea:hover {
   background: rgba(79, 70, 229, 0.05);
+}
+
+/* Category & Sub-category Dropdowns */
+.dropdown {
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.dropdown:focus {
+  outline: none;
+  border-color: #2563eb; /* blue highlight */
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+}
+
+.accordionSection {
+  margin-bottom: 1.5rem;
+}
+
+.accordionSection label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Tooltip wrapper */
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Tooltip text (hidden by default) */
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%; /* show above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827; /* dark background */
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10;
+}
+
+/* Show tooltip on hover */
+.tooltip:hover::after {
+  opacity: 1;
 }

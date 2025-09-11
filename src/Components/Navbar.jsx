@@ -5,6 +5,7 @@ import MetricCardDashboard from "./MetricCardDashboard";
 import CompanyFieldChart from "./CompanyFieldChart";
 import FundingStageChart from "./FundingStageChart";
 import DocumentTable from "./DocumentTable";
+import ITELLogo from "../assets/ITEL_Logo.png";
 
 const Navbar = () => {
   return (
@@ -14,16 +15,17 @@ const Navbar = () => {
         <div className={styles.container}>
           {/* Left - Logo + Title */}
           <div className={styles.logoSection}>
-            <Building2 className={styles.logoIcon} />
+            <img src={ITELLogo} className={styles.logoIcon} />
+            {/* <Building2 className={styles.logoIcon} /> */}
             <div>
-              <h1 className={styles.title}>Incubation Portal</h1>
+              <h1 className={styles.title}>ITEL Incubation Portal</h1>
               <p className={styles.subtitle}>Startup Management Dashboard</p>
             </div>
           </div>
 
           {/* Right - Actions */}
           <div className={styles.actions}>
-            <button className={`${styles.btn} ${styles.btnOutline}`}>
+            {/* <button className={`${styles.btn} ${styles.btnOutline}`}>
               <Search className={styles.icon} />
               Search
             </button>
@@ -32,7 +34,7 @@ const Navbar = () => {
             </button>
             <button className={`${styles.btn} ${styles.btnOutline}`}>
               <Settings className={styles.icon} />
-            </button>
+            </button> */}
             <button className={styles.btnPrimary}>
               <Plus className={styles.icon} />
               Add Startup

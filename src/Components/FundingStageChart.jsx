@@ -11,16 +11,16 @@ import {
 import styles from "./FundingStageChart.module.css";
 
 const fundingData = [
-  { stage: "Pre-Seed", companies: 15, totalFunding: 2.5, avgFunding: 0.17 },
-  { stage: "Seed A", companies: 8, totalFunding: 12.0, avgFunding: 1.5 },
-  { stage: "Seed B", companies: 5, totalFunding: 25.0, avgFunding: 5.0 },
+  { stage: "Pre-Series", companies: 18, totalFunding: 2.5, avgFunding: 0.17 },
+  { stage: "Series A", companies: 9, totalFunding: 12.0, avgFunding: 1.5 },
+  { stage: "Series B", companies: 7, totalFunding: 25.0, avgFunding: 5.0 },
 ];
 
 const FundingStageChart = () => {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Funding by Stage</h3>
+        <h3 className={styles.title}>Companies by Stage</h3>
       </div>
 
       <div className={styles.content}>
@@ -29,7 +29,7 @@ const FundingStageChart = () => {
             <div key={stage.stage} className={styles.statItem}>
               <div className={styles.statValue}>{stage.companies}</div>
               <div className={styles.statLabel}>{stage.stage}</div>
-              <div className={styles.statSub}>${stage.totalFunding}M Total</div>
+              <div className={styles.statSub}>₹{stage.totalFunding}M Total</div>
             </div>
           ))}
         </div>

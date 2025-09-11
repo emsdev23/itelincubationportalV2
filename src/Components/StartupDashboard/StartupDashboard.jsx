@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 const StartupDashboard = () => {
+  // Documents state
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -52,7 +53,10 @@ const StartupDashboard = () => {
     },
   ]);
 
+  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
 
   const totalDocuments = documents.length;
@@ -127,13 +131,42 @@ const StartupDashboard = () => {
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold mb-2">TechVenture Inc.</h1>
+              <h1 className="text-4xl font-bold mb-2">Farmland Industries</h1>
               <div className={styles.headerBadges}>
                 <div className={styles.headerBadge}>
                   <Users className="h-4 w-4" /> Founded by Sarah Johnson
                 </div>
                 <div className={styles.headerBadge}>
-                  <Calendar className="h-4 w-4" /> Registered: Jan 15, 2024
+                  <Calendar className="h-4 w-4" /> Date of Incorporation:Jan 15,
+                  2020
+                  <span
+                    style={{
+                      fontSize: "0.6rem",
+                      border: "1px solid #e03131",
+                      background: "#e03131",
+                      padding: "0.3rem",
+                      borderRadius: "1rem",
+                      color: "#fff",
+                    }}
+                  >
+                    4yrs - 5months
+                  </span>
+                </div>
+                <div className={styles.headerBadge}>
+                  <Calendar className="h-4 w-4" /> Date of Incubation:Jan 15,
+                  2022{" "}
+                  <span
+                    style={{
+                      fontSize: "0.6rem",
+                      border: "1px solid #e03131",
+                      background: "#e03131",
+                      padding: "0.3rem",
+                      borderRadius: "1rem",
+                      color: "#fff",
+                    }}
+                  >
+                    2yrs - 4months
+                  </span>
                 </div>
                 <div className={styles.headerBadge}>
                   <TrendingUp className="h-4 w-4" /> Series A Funding
@@ -162,20 +195,39 @@ const StartupDashboard = () => {
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Submitted</div>
-            <CheckCircle className={styles.iconApproved} />
+            <div
+              className={styles.tooltip}
+              data-tooltip="Documents that have been  submitted in the portal"
+            >
+              <CheckCircle className={styles.iconApproved} />
+            </div>
           </div>
           <div className={styles.cardContent}>{approvedDocuments}</div>
         </div>
+
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Pending </div>
-            <Clock className={styles.iconPending} />
+            <div
+              className={styles.tooltip}
+              data-tooltip="Monthly due Documents"
+            >
+              <Clock className={styles.iconPending} />
+            </div>
           </div>
           <div className={styles.cardContent}>{pendingDocuments}</div>
         </div>
+
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Overdue</div>
+
+            {/* <div
+              className={styles.tooltip}
+              data-tooltip="Documents has  not been updated  for months"
+            >
+              
+            </div> */}
             <AlertCircle className={styles.iconOverdue} />
           </div>
           <div className={styles.cardContent}>{overdueDocuments}</div>
@@ -203,7 +255,7 @@ const StartupDashboard = () => {
         </div>
 
         <p className="text-gray-600 mb-2">
-          Complete your registration by submitting all required documents
+          Complete your document updatation by submitting all required documents
         </p>
         <br />
         {/* <div className="flex justify-between mb-1">
@@ -226,7 +278,7 @@ const StartupDashboard = () => {
         <div className={styles.progressStats}>
           <div className={`${styles.progressStat} ${styles.progressApproved}`}>
             <div className={styles.progressDot}></div>
-            <div>{approvedDocuments} Approved</div>
+            <div>{approvedDocuments} Submitted</div>
           </div>
           <div className={`${styles.progressStat} ${styles.progressPending}`}>
             <div className={styles.progressDot}></div>
@@ -283,20 +335,89 @@ const StartupDashboard = () => {
       {isModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
-            <h3 className="text-lg font-bold mb-2">Upload Document</h3>
-            <div
-              className={styles.dragDropArea}
-              onClick={() => document.getElementById("fileInput").click()}
-            >
-              <p>Drag & drop file here or click to select</p>
-              <input
-                type="file"
-                id="fileInput"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
+            <h3 className="text-lg font-bold mb-4">Upload Document</h3>
+
+            {/* Document Category */}
+            <div className={styles.accordionSection}>
+              <label className="font-semibold">Select Category</label>
+              <select
+                className={styles.dropdown}
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setSelectedSubCategory("");
+                }}
+              >
+                <option value="">-- Choose Category --</option>
+                <option value="legal">Legal</option>
+                <option value="financial">Financial</option>
+                <option value="tax">Tax</option>
+              </select>
             </div>
-            <div className="flex justify-end gap-2 mt-2">
+
+            {/* Subcategory (only visible after category is selected) */}
+            {selectedCategory && (
+              <div className={styles.accordionSection}>
+                <label className="font-semibold">Select Sub-Category</label>
+                <select
+                  className={styles.dropdown}
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                >
+                  <option value="">-- Choose Sub-Category --</option>
+                  {selectedCategory === "legal" && (
+                    <>
+                      <option value="incorporation">
+                        Incorporation Certificate
+                      </option>
+                      <option value="contracts">Contracts</option>
+                    </>
+                  )}
+                  {selectedCategory === "financial" && (
+                    <>
+                      <option value="balanceSheet">Balance Sheet</option>
+                      <option value="pnl">Profit & Loss</option>
+                    </>
+                  )}
+                  {selectedCategory === "tax" && (
+                    <>
+                      <option value="gst">GST Filing</option>
+                      <option value="itr">ITR</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            )}
+
+            {/* File Upload (only visible after subcategory is chosen) */}
+            {selectedSubCategory && (
+              <div className={styles.accordionSection}>
+                <label className="font-semibold">Upload File</label>
+                <div
+                  className={styles.dragDropArea}
+                  onClick={() => document.getElementById("fileInput").click()}
+                >
+                  <p>Drag & drop file here or click to select</p>
+                  <input
+                    type="file"
+                    id="fileInput"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div
+              className="flex justify-end gap-2 mt-2"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "2rem",
+                marginTop: "2rem",
+              }}
+            >
               <button
                 className={styles.buttonOutline}
                 onClick={() => setIsModalOpen(false)}
@@ -305,9 +426,12 @@ const StartupDashboard = () => {
               </button>
               <button
                 className={styles.buttonPrimary}
+                disabled={!selectedSubCategory || !selectedFile}
                 onClick={() => {
                   setIsModalOpen(false);
                   setSelectedFile(null);
+                  setSelectedCategory("");
+                  setSelectedSubCategory("");
                 }}
               >
                 Upload
