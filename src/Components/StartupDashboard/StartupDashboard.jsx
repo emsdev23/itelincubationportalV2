@@ -19,6 +19,7 @@ const StartupDashboard = () => {
     {
       id: 1,
       name: "Certificate of Incorporation",
+      documentSubCategory: "ROC Filing",
       status: "approved",
       uploadDate: "2024-01-15",
       dueDate: "2024-02-15",
@@ -26,6 +27,7 @@ const StartupDashboard = () => {
     {
       id: 2,
       name: "Business Plan",
+      documentSubCategory: "Financial Projections",
       status: "pending",
       uploadDate: "2024-01-20",
       dueDate: "2024-02-20",
@@ -33,6 +35,7 @@ const StartupDashboard = () => {
     {
       id: 3,
       name: "Financial Statements",
+      documentSubCategory: "Balance Sheet",
       status: "overdue",
       uploadDate: null,
       dueDate: "2024-01-30",
@@ -40,6 +43,7 @@ const StartupDashboard = () => {
     {
       id: 4,
       name: "Tax Registration",
+      documentSubCategory: "GST Registration",
       status: "approved",
       uploadDate: "2024-01-10",
       dueDate: "2024-02-10",
@@ -47,6 +51,7 @@ const StartupDashboard = () => {
     {
       id: 5,
       name: "Founder Agreements",
+      documentSubCategory: "Shareholder Agreement",
       status: "pending",
       uploadDate: "2024-01-25",
       dueDate: "2024-02-25",
@@ -305,12 +310,13 @@ const StartupDashboard = () => {
         <table>
           <thead>
             <tr className="bg-gray-200">
-              <th>Document Name</th>
+              <th>Document Category</th>
+              <th>Document SubCategory</th>
               <th>Status</th>
               <th>Upload Date</th>
               <th>Due Date</th>
-              <th>Actions</th>
-              {/* <th></th> */}
+              {/* <th>Actions</th> */}
+              <th> </th>
             </tr>
           </thead>
           <tbody>
@@ -318,6 +324,9 @@ const StartupDashboard = () => {
               <tr key={doc.id} className={styles.tableRow}>
                 <td className="flex items-center gap-2">
                   {getStatusIcon(doc.status)} {doc.name}
+                </td>
+                <td className="flex items-center gap-2">
+                  {doc.documentSubCategory}
                 </td>
                 <td>{getStatusBadge(doc.status)}</td>
                 <td>{doc.uploadDate || <em>Not uploaded</em>}</td>

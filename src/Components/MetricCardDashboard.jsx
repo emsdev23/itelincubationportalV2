@@ -1,7 +1,13 @@
 import React from "react";
 import styles from "./MetricCardDashboard.module.css"; // ⬅️ import the CSS module
 import MetricCard from "./MetricCard";
-import { Building2, DollarSign, Users, TrendingUp } from "lucide-react";
+import {
+  Building2,
+  DollarSign,
+  Users,
+  TrendingUp,
+  IndianRupee,
+} from "lucide-react";
 
 const MetricCardDashboard = () => {
   return (
@@ -21,7 +27,7 @@ const MetricCardDashboard = () => {
           title="Total Networth"
           value="₹42.5M"
           subtitle="Combined valuation"
-          icon={<DollarSign size={20} />}
+          icon={<IndianRupee size={20} />}
           variant="success"
           trend={{ value: 8.5, isPositive: true }}
         />

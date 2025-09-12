@@ -7,6 +7,7 @@ const mockData = [
     id: "1",
     companyName: "Farmland Industries",
     documentType: "Business Plan",
+    documentSubCategory: "Market Analysis", // NEW FIELD
     submissionDate: "2024-01-15",
     dueDate: "2024-01-20",
     status: "submitted",
@@ -17,6 +18,7 @@ const mockData = [
     id: "2",
     companyName: "Zealev DC-Tech Private Limited",
     documentType: "Financial Report Q4",
+    documentSubCategory: "Balance Sheet", // NEW FIELD
     submissionDate: "-",
     dueDate: "2024-01-18",
     status: "overdue",
@@ -27,6 +29,7 @@ const mockData = [
     id: "3",
     companyName: "Shabd Intelligence Pvt. Ltd",
     documentType: "Compliance Certificate",
+    documentSubCategory: "Tax Compliance", // NEW FIELD
     submissionDate: "-",
     dueDate: "2024-01-25",
     status: "pending",
@@ -37,9 +40,10 @@ const mockData = [
     id: "4",
     companyName: "Inter-Cosmos",
     documentType: "IP Documentation",
+    documentSubCategory: "Patent Filing", // ✅ added
     submissionDate: "2024-01-10",
     dueDate: "2024-01-15",
-    status: "approved",
+    status: "submitted",
     founder: "James Wilson",
     stage: "Series-a",
   },
@@ -47,6 +51,7 @@ const mockData = [
     id: "5",
     companyName: "AIPsychi Pvt. Ltd.",
     documentType: "Legal Compliance",
+    documentSubCategory: "NDA (Non-Disclosure Agreement)", // ✅ added
     submissionDate: "-",
     dueDate: "2024-01-22",
     status: "pending",
@@ -124,7 +129,7 @@ export default function DocumentTable() {
             <tr>
               <th>Company</th>
               <th>Document Category</th>
-
+              <th>Document Subcategory</th>
               <th>Founder</th>
               <th>Stage</th>
               <th>Submission Date</th>
@@ -145,6 +150,7 @@ export default function DocumentTable() {
               >
                 <td>{item.companyName}</td>
                 <td>{item.documentType}</td>
+                <td>{item.documentSubCategory}</td>
                 <td>{item.founder}</td>
                 <td>
                   <span className={`${styles.badge} ${styles[item.stage]}`}>
