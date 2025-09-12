@@ -25,7 +25,7 @@ const MetricCardDashboard = () => {
 
         <MetricCard
           title="Total Networth"
-          value="₹42.5M"
+          value="₹1600 CR"
           subtitle="Combined valuation"
           icon={<IndianRupee size={20} />}
           variant="success"
