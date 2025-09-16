@@ -1,7 +1,13 @@
 import { useState } from "react";
 import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/FarmlandLogo.png";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import style from "../Navbar.module.css";
 import {
   CheckCircle,
@@ -20,6 +26,13 @@ import ITELLogo from "../../assets/ITEL_Logo.png";
 const StartupDashboard = () => {
   const location = useLocation();
 
+  const { id } = useParams(); // 👈 gets the company ID from URL
+  const [searchparams, setsearchparams] = useSearchParams();
+  console.log(searchparams);
+  const founder = searchparams.get("founder");
+  // const lng = searchparams.get("lng");
+  console.log(id);
+  console.log(founder);
   console.log("Current path:", location.pathname);
 
   // Documents state
@@ -183,7 +196,7 @@ const StartupDashboard = () => {
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold mb-2">Farmland Industries</h1>
+                <h1 className="text-4xl font-bold mb-2">{id}</h1>
                 <div className={styles.headerBadges}>
                   <div className={styles.headerBadge}>
                     <Users className="h-4 w-4" /> Founded by Sarah Johnson

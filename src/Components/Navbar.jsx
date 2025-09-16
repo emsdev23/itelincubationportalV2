@@ -73,7 +73,7 @@ const Navbar = () => {
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h2>Add New Company</h2>
+              <h2>Add New Company ?</h2>
               <button
                 className={styles.closeButton}
                 onClick={() => setIsModalOpen(false)}
@@ -116,6 +116,26 @@ const Navbar = () => {
                 />
               </label>
               <label>
+                mobile
+                <input
+                  type="text"
+                  name="founder"
+                  value={formData.founder}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  type="text"
+                  name="founder"
+                  value={formData.founder}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+              <label>
                 companyaddress
                 <input
                   type="text"
@@ -140,7 +160,7 @@ const Navbar = () => {
               <div className={styles.formActions}>
                 <button
                   type="button"
-                  className={styles.btnOutline}
+                  className={styles.btnPrimary}
                   onClick={() => setIsModalOpen(false)}
                 >
                   Cancel

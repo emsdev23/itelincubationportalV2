@@ -177,7 +177,7 @@ export default function DocumentTable() {
                   </span>
                 </td>
                 <td className={styles.textRight}>
-                  <NavLink to="./startup/Dashboard">
+                  <NavLink to={`/startup/Dashboard/${item.companyName}`}>
                     {/* NavLink */}
                     <button className={styles.buttonSmall}>View</button>
                   </NavLink>
