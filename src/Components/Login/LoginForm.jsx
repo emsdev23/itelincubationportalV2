@@ -10,9 +10,11 @@ const LoginForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const dummyusername = "ItelFoundation";
+  const dummypassword = "itel@123";
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    username: "ItelFoundation",
+    password: "itel@123",
     role: "",
   });
 
@@ -21,25 +23,34 @@ const LoginForm = () => {
     console.log("Login attempt:", formData);
 
     // 👉 Add your login validation here
-    if (formData.username && formData.password) {
-      if (formData.username === "1234") {
+    if (
+      formData.username === dummyusername &&
+      formData.password === dummypassword
+    ) {
+      if (formData.role === "admin") {
         Swal.fire({
           icon: "success",
           title: "Welcome Admin!",
-          text: "Redirecting to Incubation Dashboard...",
+          text: "Redirecting to Incubation Portal...",
           timer: 2000,
           showConfirmButton: false,
         });
         setTimeout(() => navigate("/Incubation/Dashboard"), 1000);
-      } else if (formData.username === "5678") {
+      } else if (formData.role === "manager") {
         Swal.fire({
           icon: "success",
-          title: "Welcome Startup!",
-          text: "Redirecting to Startup Dashboard...",
+          title: "Welcome manager!",
+          text: "Redirecting to your  Dashboard...",
           timer: 2000,
           showConfirmButton: false,
         });
         setTimeout(() => navigate(`/startup/Dashboard/${id}`), 1000);
+      } else if (formData.role === "employee") {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "work in progress",
+        });
       } else {
         Swal.fire({
           icon: "error",
@@ -98,7 +109,8 @@ const LoginForm = () => {
                       handleInputChange("username", e.target.value)
                     }
                     className={styles.input}
-                    // required
+                    style={{ textAlign: "center" }}
+                    required
                   />
                 </div>
               </div>
@@ -119,7 +131,8 @@ const LoginForm = () => {
                       handleInputChange("password", e.target.value)
                     }
                     className={styles.input}
-                    // required
+                    style={{ textAlign: "center" }}
+                    required
                   />
                   <button
                     type="button"
@@ -132,7 +145,7 @@ const LoginForm = () => {
               </div>
 
               {/* Role Selector */}
-              {/* <div className={styles.field}>
+              <div className={styles.field}>
                 <label htmlFor="role" className={styles.label}>
                   Role
                 </label>
@@ -147,13 +160,12 @@ const LoginForm = () => {
                     <option value="" disabled>
                       Select your role
                     </option>
-                    <option value="admin">Administrator</option>
+                    <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
-                    <option value="employee">Employee</option>
-                    <option value="guest">Guest</option>
+                    <option value="employee">Operator</option>
                   </select>
                 </div>
-              </div> */}
+              </div>
 
               {/* Login Button */}
               <button type="submit" className={styles.submitButton}>

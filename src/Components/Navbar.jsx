@@ -72,8 +72,9 @@ const Navbar = () => {
       {isModalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalContent}>
+            {/* Modal Header */}
             <div className={styles.modalHeader}>
-              <h2>Add New Company ?</h2>
+              <h2>Add New Company</h2>
               <button
                 className={styles.closeButton}
                 onClick={() => setIsModalOpen(false)}
@@ -82,81 +83,176 @@ const Navbar = () => {
               </button>
             </div>
 
+            {/* Scrollable Form */}
             <form onSubmit={handleSubmit} className={styles.form}>
-              <label>
-                Company Name
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+              <div className={styles.formGrid}>
+                <label>
+                  Company Name
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
 
-              <label>
-                Founder
-                <input
-                  type="text"
-                  name="founder"
-                  value={formData.founder}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+                <label>
+                  Founder
+                  <input
+                    type="text"
+                    name="founder"
+                    value={formData.founder}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
 
-              <label>
-                Date of Incorporation
-                <input
-                  type="date"
-                  name="incorporationDate"
-                  value={formData.incorporationDate}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                mobile
-                <input
-                  type="text"
-                  name="founder"
-                  value={formData.founder}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                Email
-                <input
-                  type="text"
-                  name="founder"
-                  value={formData.founder}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                companyaddress
-                <input
-                  type="text"
-                  name="founder"
-                  value={formData.founder}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+                <label>
+                  Date of Incorporation
+                  <input
+                    type="date"
+                    name="incorporationDate"
+                    value={formData.incorporationDate}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
 
-              <label>
-                Website
-                <input
-                  type="url"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+                <label>
+                  Mobile
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
 
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
+
+                <label>
+                  Website
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleChange}
+                    required
+                  />
+                </label>
+
+                {/* Address Fields */}
+                <label>
+                  Address Line 1
+                  <input
+                    type="text"
+                    name="address1"
+                    value={formData.address1}
+                    onChange={handleChange}
+                    placeholder="House no., Street, etc."
+                  />
+                </label>
+
+                <label>
+                  Address Line 2
+                  <input
+                    type="text"
+                    name="address2"
+                    value={formData.address2}
+                    onChange={handleChange}
+                    placeholder="Apartment, landmark (optional)"
+                  />
+                </label>
+
+                <label>
+                  City
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                <label>
+                  State / Province
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                <label>
+                  Country
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select your country</option>
+                    <option value="india">India</option>
+                    <option value="usa">United States</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="australia">Australia</option>
+                  </select>
+                </label>
+
+                <label>
+                  Pincode / Zip Code
+                  <input
+                    type="text"
+                    name="zipcode"
+                    value={formData.zipcode}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                <label>
+                  Phone Number
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                {/* Example extra fields */}
+                <label>
+                  Industry
+                  <input
+                    type="text"
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                <label>
+                  Number of Employees
+                  <input
+                    type="number"
+                    name="employees"
+                    value={formData.employees}
+                    onChange={handleChange}
+                  />
+                </label>
+              </div>
+
+              {/* Footer buttons */}
               <div className={styles.formActions}>
                 <button
                   type="button"
