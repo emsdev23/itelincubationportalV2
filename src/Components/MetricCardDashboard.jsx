@@ -9,14 +9,21 @@ import {
   IndianRupee,
 } from "lucide-react";
 
-const MetricCardDashboard = () => {
+const MetricCardDashboard = ({ stats }) => {
+  const {
+    total_founders = 0,
+    total_incubatees = 0,
+    total_share = 0,
+  } = stats || {};
+
+  if (!stats) return <p>Loading...</p>;
   return (
     <main className={styles.dashboardMain}>
       {/* Key Metrics */}
       <div className={styles.metricsGrid}>
         <MetricCard
           title="Total Incubatees"
-          value="34"
+          value={total_incubatees}
           subtitle="Active startups in portfolio"
           icon={<Building2 size={20} />}
           variant="primary"
@@ -25,7 +32,7 @@ const MetricCardDashboard = () => {
 
         <MetricCard
           title="Total Networth"
-          value="₹1600 CR"
+          value="₹0"
           subtitle="Combined valuation"
           icon={<IndianRupee size={20} />}
           variant="success"
@@ -34,7 +41,7 @@ const MetricCardDashboard = () => {
 
         <MetricCard
           title="Total Founders"
-          value="67"
+          value={total_incubatees}
           subtitle="Registered entrepreneurs"
           icon={<Users size={20} />}
           variant="default"
@@ -43,7 +50,7 @@ const MetricCardDashboard = () => {
 
         <MetricCard
           title="Overdue Documents"
-          value="5"
+          value="0"
           subtitle="Require immediate attention"
           icon={<TrendingUp size={20} />}
           variant="warning"

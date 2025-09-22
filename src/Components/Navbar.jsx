@@ -1,13 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./Navbar.module.css";
-import { Plus, X } from "lucide-react";
+import { Plus, X, LogOut, CircleUserRound } from "lucide-react";
 import ITELLogo from "../assets/ITEL_Logo.png";
 import MetricCardDashboard from "./MetricCardDashboard";
 import CompanyFieldChart from "./CompanyFieldChart";
 import FundingStageChart from "./FundingStageChart";
 import DocumentTable from "./DocumentTable";
+import { useNavigate } from "react-router-dom";
+import CompanyTable from "./CompanyTable";
+
+import { useContext } from "react";
+import { DataContext } from "../Components/Datafetching/DataProvider";
 
 const Navbar = () => {
+  const { stats, byField, byStage, loading, companyDoc, listOfIncubatees } =
+    useContext(DataContext);
+  const navigate = useNavigate();
+
+  console.log(stats);
+  console.log(byField);
+  console.log(byStage);
+  console.log(loading);
+  console.log(companyDoc);
+  console.log(listOfIncubatees);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +39,7 @@ const Navbar = () => {
     });
   };
 
+  //form for add startUP
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("New Startup:", formData);
@@ -31,6 +48,25 @@ const Navbar = () => {
     setFormData({ name: "", founder: "", incorporationDate: "", website: "" });
   };
 
+  const handleLogout = () => {
+    // localStorage.removeItem("userid");
+    // localStorage.removeItem("token");
+    // localStorage.removeItem("roleid");
+
+    //session storage
+    sessionStorage.removeItem("userid");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("roleid");
+    navigate("/", { replace: true });
+  };
+
+  //get data form session storage
+  const userid = JSON.parse(sessionStorage.getItem("userid"));
+  const roleid = sessionStorage.getItem("roleid");
+  const token = sessionStorage.getItem("token");
+  console.log(userid, roleid, token);
+
+  useEffect(() => {});
   return (
     <div className={styles.dashboard}>
       {/* Header */}
@@ -54,17 +90,38 @@ const Navbar = () => {
               <Plus className={styles.icon} />
               Add Startup
             </button>
+
+            <button
+              className={styles.btnPrimary}
+              onClick={handleLogout}
+              style={{ color: "#fff", background: "#0ca678" }}
+            >
+              <LogOut className={styles.icon} />
+              Logout
+            </button>
+
+            <div>
+              <button
+                className={styles.btnPrimary}
+                // onClick={() => setIsModalOpen(true)}
+              >
+                <CircleUserRound className={styles.icon} />
+                Incubator
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className={styles.main}>
-        <MetricCardDashboard />
+        <MetricCardDashboard stats={stats} />
         <div className={styles.charts}>
-          <CompanyFieldChart />
-          <FundingStageChart />
+          <CompanyFieldChart byField={byField} />
+          <FundingStageChart byStage={byStage} />
         </div>
+        <CompanyTable companyList={listOfIncubatees} />
+        <br />
         <DocumentTable />
       </main>
 
@@ -84,6 +141,7 @@ const Navbar = () => {
             </div>
 
             {/* Scrollable Form */}
+
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.formGrid}>
                 <label>

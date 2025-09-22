@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/FarmlandLogo.png";
+import DocumentUploadModal from "./DocumentUploadModal";
 import {
   Link,
   NavLink,
@@ -23,7 +24,12 @@ import {
 } from "lucide-react";
 import ITELLogo from "../../assets/ITEL_Logo.png";
 
+import { DataContext } from "../Datafetching/DataProvider";
+// import api from "./Datafetching/api";
+
 const StartupDashboard = () => {
+  const { roleid } = useContext(DataContext);
+  console.log(roleid);
   const location = useLocation();
 
   const { id } = useParams(); // 👈 gets the company ID from URL
@@ -79,7 +85,7 @@ const StartupDashboard = () => {
     },
   ]);
 
-  // Modal states
+  // Modal state - use only one state for the modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
@@ -322,12 +328,16 @@ const StartupDashboard = () => {
             <h2 className="text-xl font-bold mb-2">
               Document Updatation Progress
             </h2>
-            <button
-              className={styles.buttonPrimary}
-              onClick={() => setIsModalOpen(true)}
-            >
-              <Upload className="h-4 w-4 mr-2" /> Add Document
-            </button>
+            {roleid !== 1 ? (
+              ""
+            ) : (
+              <button
+                className={styles.buttonPrimary}
+                onClick={() => setIsModalOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" /> Add Document
+              </button>
+            )}
           </div>
 
           <p className="text-gray-600 mb-2">
@@ -416,110 +426,10 @@ const StartupDashboard = () => {
 
         {/* Add Document Modal */}
         {isModalOpen && (
-          <div className={styles.modalBackdrop}>
-            <div className={styles.modalContent}>
-              <h3 className="text-lg font-bold mb-4">Upload Document</h3>
-
-              {/* Document Category */}
-              <div className={styles.accordionSection}>
-                <label className="font-semibold">Select Category</label>
-                <select
-                  className={styles.dropdown}
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setSelectedSubCategory("");
-                  }}
-                >
-                  <option value="">-- Choose Category --</option>
-                  <option value="legal">Legal</option>
-                  <option value="financial">Financial</option>
-                  <option value="tax">Tax</option>
-                </select>
-              </div>
-
-              {/* Subcategory (only visible after category is selected) */}
-              {/* {selectedCategory && () } */}
-              <div className={styles.accordionSection}>
-                <label className="font-semibold">Select Sub-Category</label>
-                <select
-                  className={styles.dropdown}
-                  value={selectedSubCategory}
-                  onChange={(e) => setSelectedSubCategory(e.target.value)}
-                >
-                  <option value="">-- Choose Sub-Category --</option>
-                  {selectedCategory === "legal" && (
-                    <>
-                      <option value="incorporation">
-                        Incorporation Certificate
-                      </option>
-                      <option value="contracts">Contracts</option>
-                    </>
-                  )}
-                  {selectedCategory === "financial" && (
-                    <>
-                      <option value="balanceSheet">Balance Sheet</option>
-                      <option value="pnl">Profit & Loss</option>
-                    </>
-                  )}
-                  {selectedCategory === "tax" && (
-                    <>
-                      <option value="gst">GST Filing</option>
-                      <option value="itr">ITR</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              {/* File Upload (only visible after subcategory is chosen) */}
-              {/* {selectedSubCategory && ( )} */}
-              <div className={styles.accordionSection}>
-                <label className="font-semibold">Upload File</label>
-                <div
-                  className={styles.dragDropArea}
-                  onClick={() => document.getElementById("fileInput").click()}
-                >
-                  <p>Drag & drop file here or click to select</p>
-                  <input
-                    type="file"
-                    id="fileInput"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div
-                className="flex justify-end gap-2 mt-2"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "2rem",
-                  marginTop: "2rem",
-                }}
-              >
-                <button
-                  className={styles.buttonOutline}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className={styles.buttonPrimary}
-                  disabled={!selectedSubCategory || !selectedFile}
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setSelectedFile(null);
-                    setSelectedCategory("");
-                    setSelectedSubCategory("");
-                  }}
-                >
-                  Upload
-                </button>
-              </div>
-            </div>
-          </div>
+          <DocumentUploadModal
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
         )}
       </div>
     </div>

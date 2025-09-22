@@ -1,68 +1,77 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useContext } from "react";
 import styles from "./LoginForm.module.css";
 import logo from "../../assets/ITEL_Logo.png";
-import { Eye, EyeOff, Lock, User, UserCheck } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 import Swal from "sweetalert2";
+import api from "../Datafetching/api"; // axios instance
+import { DataContext } from "../Datafetching/DataProvider";
 
 const LoginForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { setUserid } = useContext(DataContext); // ✅ access setUserid
   const [showPassword, setShowPassword] = useState(false);
-  const dummyusername = "ItelFoundation";
-  const dummypassword = "itel@123";
   const [formData, setFormData] = useState({
-    username: "ItelFoundation",
-    password: "itel@123",
-    role: "",
+    username: "",
+    password: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
 
-    // 👉 Add your login validation here
-    if (
-      formData.username === dummyusername &&
-      formData.password === dummypassword
-    ) {
-      if (formData.role === "admin") {
+    try {
+      const response = await api.post("/auth/login", {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      const result = response.data;
+      console.log("Login Response:", result);
+
+      const { token, userid, roleid } = result.data;
+
+      // Save session data
+      localStorage.clear();
+      sessionStorage.setItem("userid", userid); // no need to stringify
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("roleid", roleid);
+
+      // Update context so dashboard fetches data automatically
+      setUserid(userid);
+
+      // Redirect based on role
+      if (roleid === "1") {
         Swal.fire({
           icon: "success",
-          title: "Welcome Admin!",
-          text: "Redirecting to Incubation Portal...",
+          title: "Welcome Incubator!",
+          text: "Redirecting...",
           timer: 2000,
           showConfirmButton: false,
         });
         setTimeout(() => navigate("/Incubation/Dashboard"), 1000);
-      } else if (formData.role === "manager") {
+      } else if (roleid === "4") {
         Swal.fire({
           icon: "success",
-          title: "Welcome manager!",
-          text: "Redirecting to your  Dashboard...",
+          title: "Welcome Incubatee!",
+          text: "Redirecting...",
           timer: 2000,
           showConfirmButton: false,
         });
-        setTimeout(() => navigate(`/startup/Dashboard/${id}`), 1000);
-      } else if (formData.role === "employee") {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "work in progress",
-        });
+        setTimeout(() => navigate(`/startup/Dashboard/${userid}`), 1000);
       } else {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Invalid credentials!",
+          text: "Unknown role!",
         });
       }
-    } else {
+    } catch (error) {
+      console.error("Login error:", error);
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Invalid credentials!",
+        title: "Login Failed",
+        text: "Invalid username or password",
       });
     }
   };
@@ -74,7 +83,6 @@ const LoginForm = () => {
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-        {/* Logo Section */}
         <div className={styles.logoSection}>
           <div className={styles.logoWrapper}>
             <img src={logo} alt="Logo" className={styles.logo} />
@@ -83,7 +91,6 @@ const LoginForm = () => {
           <p className={styles.subText}>Sign in to your account to continue</p>
         </div>
 
-        {/* Login Card */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h2 className={styles.cardTitle}>Sign In</h2>
@@ -93,7 +100,6 @@ const LoginForm = () => {
           </div>
           <div className={styles.cardContent}>
             <form onSubmit={handleSubmit} className={styles.form}>
-              {/* Username Field */}
               <div className={styles.field}>
                 <label htmlFor="username" className={styles.label}>
                   Username
@@ -115,7 +121,6 @@ const LoginForm = () => {
                 </div>
               </div>
 
-              {/* Password Field */}
               <div className={styles.field}>
                 <label htmlFor="password" className={styles.label}>
                   Password
@@ -144,35 +149,10 @@ const LoginForm = () => {
                 </div>
               </div>
 
-              {/* Role Selector */}
-              <div className={styles.field}>
-                <label htmlFor="role" className={styles.label}>
-                  Role
-                </label>
-                <div className={styles.inputWrapper}>
-                  <UserCheck className={styles.icon} />
-                  <select
-                    id="role"
-                    value={formData.role}
-                    onChange={(e) => handleInputChange("role", e.target.value)}
-                    className={styles.select}
-                  >
-                    <option value="" disabled>
-                      Select your role
-                    </option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="employee">Operator</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Login Button */}
               <button type="submit" className={styles.submitButton}>
                 Sign In
               </button>
 
-              {/* Forgot Password Link */}
               <div className={styles.textCenter}>
                 <button type="button" className={styles.link}>
                   Forgot your password?
@@ -182,7 +162,6 @@ const LoginForm = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className={styles.footer}>
           <p>
             Don&apos;t have an account?{" "}

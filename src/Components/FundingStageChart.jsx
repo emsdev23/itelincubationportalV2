@@ -10,13 +10,15 @@ import {
 } from "recharts";
 import styles from "./FundingStageChart.module.css";
 
-const fundingData = [
-  { stage: "Pre-Series", companies: 18, totalFunding: 2.5, avgFunding: 0.17 },
-  { stage: "Series A", companies: 9, totalFunding: 12.0, avgFunding: 1.5 },
-  { stage: "Series B", companies: 7, totalFunding: 25.0, avgFunding: 5.0 },
-];
+const FundingStageChart = ({ byStage }) => {
+  if (!byStage || byStage.length === 0) return <p>No data available</p>;
 
-const FundingStageChart = () => {
+  // transform API response to chart-friendly format
+  const fundingData = byStage.map((item) => ({
+    stage: item.startupstagesname,
+    companies: item.incubatees_count,
+  }));
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -29,7 +31,6 @@ const FundingStageChart = () => {
             <div key={stage.stage} className={styles.statItem}>
               <div className={styles.statValue}>{stage.companies}</div>
               <div className={styles.statLabel}>{stage.stage}</div>
-              <div className={styles.statSub}>₹{stage.totalFunding}M Total</div>
             </div>
           ))}
         </div>
@@ -47,16 +48,9 @@ const FundingStageChart = () => {
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
-                formatter={(value, name) => [
-                  name === "companies" ? `${value} companies` : `$${value}M`,
-                  name === "companies" ? "Companies" : "Avg Funding",
-                ]}
+                formatter={(value, name) => [`${value} companies`, "Companies"]}
               />
-              <Bar
-                dataKey="companies"
-                fill="#3b82f6" /* blue-500 */
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="companies" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

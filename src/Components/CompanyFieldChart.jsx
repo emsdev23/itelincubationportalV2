@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   PieChart,
   Pie,
@@ -8,18 +8,36 @@ import {
   Tooltip,
 } from "recharts";
 import styles from "./CompanyFieldChart.module.css";
+import { DataContext } from "../Components/Datafetching/DataProvider";
 
-const data = [
-  { name: "Medical", value: 35, count: 12 },
-  { name: "Embedded", value: 25, count: 8 },
-  { name: "Research", value: 20, count: 7 },
-  { name: "FinTech", value: 15, count: 5 },
-  { name: "EdTech", value: 5, count: 2 },
+const COLORS = [
+  "#3b82f6",
+  "#0ea5e9",
+  "#8b5cf6",
+  "#22c55e",
+  "#f97316",
+  "#ef4444",
+  "#14b8a6",
+  "#a855f7",
+  "#facc15",
+  "#84cc16",
+  "#f87171",
+  "#10b981",
+  "#6366f1", // extra colors for 13 items
 ];
 
-const COLORS = ["#3b82f6", "#0ea5e9", "#8b5cf6", "#22c55e", "#f97316"];
+const CompanyFieldChart = ({ byField }) => {
+  if (!byField || byField.length === 0) return <p>No data available</p>;
 
-const CompanyFieldChart = () => {
+  // transform API response into recharts format
+  const total = byField.reduce((sum, item) => sum + item.incubatees_count, 0);
+
+  const data = byField.map((item) => ({
+    name: item.fieldofworkname,
+    value: parseFloat(((item.incubatees_count / total) * 100).toFixed(1)),
+    count: item.incubatees_count,
+  }));
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -34,7 +52,7 @@ const CompanyFieldChart = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, value }) => `${name}: ${value}%`}
+                label={({ value }) => `${value}%`}
                 outerRadius={80}
                 dataKey="value"
               >

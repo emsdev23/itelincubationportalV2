@@ -1,86 +1,97 @@
-import React, { useState } from "react";
+// DocumentTable.jsx
+import React, { useState, useContext } from "react";
 import styles from "./DocumentTable.module.css";
-import { Link, NavLink } from "react-router-dom";
-
-const mockData = [
-  {
-    id: "1",
-    companyName: "Farmland Industries",
-    documentType: "Business Plan",
-    documentSubCategory: "Market Analysis", // NEW FIELD
-    submissionDate: "2024-01-15",
-    dueDate: "2024-01-20",
-    status: "submitted",
-    founder: "Dr. Sarah Johnson",
-    stage: "Series-a",
-  },
-  {
-    id: "2",
-    companyName: "Zealev DC-Tech Private Limited",
-    documentType: "Financial Report Q4",
-    documentSubCategory: "Balance Sheet", // NEW FIELD
-    submissionDate: "-",
-    dueDate: "2024-01-18",
-    status: "overdue",
-    founder: "Alex Chen",
-    stage: "pre-Series",
-  },
-  {
-    id: "3",
-    companyName: "Shabd Intelligence Pvt. Ltd",
-    documentType: "Compliance Certificate",
-    documentSubCategory: "Tax Compliance", // NEW FIELD
-    submissionDate: "-",
-    dueDate: "2024-01-25",
-    status: "pending",
-    founder: "Prof. Maria Garcia",
-    stage: "Series-b",
-  },
-  {
-    id: "4",
-    companyName: "Inter-Cosmos",
-    documentType: "IP Documentation",
-    documentSubCategory: "Patent Filing", // ✅ added
-    submissionDate: "2024-01-10",
-    dueDate: "2024-01-15",
-    status: "submitted",
-    founder: "James Wilson",
-    stage: "Series-a",
-  },
-  {
-    id: "5",
-    companyName: "AIPsychi Pvt. Ltd.",
-    documentType: "Legal Compliance",
-    documentSubCategory: "NDA (Non-Disclosure Agreement)", // ✅ added
-    submissionDate: "-",
-    dueDate: "2024-01-22",
-    status: "pending",
-    founder: "Lisa Zhang",
-    stage: "pre-Series",
-  },
-];
+import { NavLink } from "react-router-dom";
+import { DataContext } from "../Components/Datafetching/DataProvider";
+import api from "./Datafetching/api";
 
 export default function DocumentTable() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [stageFilter, setStageFilter] = useState("all");
+  const {
+    companyDoc,
+    loading,
+    fromYear,
+    toYear,
+    setFromYear,
+    setToYear,
+    userid,
+    setCompanyDoc,
+  } = useContext(DataContext);
 
-  const filteredData = mockData.filter((item) => {
+  const [tempFromYear, setTempFromYear] = useState(fromYear);
+  const [tempToYear, setTempToYear] = useState(toYear);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  if (loading) return <p>Loading documents...</p>;
+
+  // Helper to format dates
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d)) return "-";
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Filtering logic
+  const filteredData = (companyDoc || []).filter((item) => {
+    const statusNormalized = (item.status || "").toLowerCase();
+
     const matchesSearch =
-      item.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.founder.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.documentType.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.incubateesname || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.documentname || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.doccatname || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStage =
+      stageFilter === "all" ||
+      (item.incubateesstagelevel &&
+        item.incubateesstagelevel === Number(stageFilter));
 
     const matchesStatus =
-      statusFilter === "all" || item.status === statusFilter;
-    const matchesStage = stageFilter === "all" || item.stage === stageFilter;
+      statusFilter === "all" || statusNormalized === statusFilter;
 
-    return matchesSearch && matchesStatus && matchesStage;
+    return matchesSearch && matchesStage && matchesStatus;
   });
 
-  const isOverdue = (dueDate, status) => {
-    if (status === "submitted" || status === "approved") return false;
-    return new Date(dueDate) < new Date();
+  // Stage name mapping
+  const getStageName = (level) => {
+    switch (level) {
+      case 1:
+        return "Pre-Seed";
+      case 2:
+        return "Seed";
+      case 3:
+        return "Early Stage";
+      case 4:
+        return "Growth Stage";
+      case 5:
+        return "Expansion Stage";
+      default:
+        return "";
+    }
+  };
+
+  const fetchDocumentsByYear = async () => {
+    try {
+      const res = await api.post("/generic/getcollecteddocsdash", {
+        userId: "ALL",
+        startYear: tempFromYear,
+        endYear: tempToYear,
+      });
+      setCompanyDoc(res.data.data);
+      console.log(res.data.data);
+    } catch (err) {
+      console.error("Error fetching documents by year:", err);
+    }
   };
 
   return (
@@ -92,12 +103,53 @@ export default function DocumentTable() {
 
       <div className={styles.filters}>
         <input
+          type="number"
+          value={tempFromYear}
+          onChange={(e) => setTempFromYear(e.target.value)}
+          placeholder="From Year"
+          className={styles.input}
+        />
+        <input
+          type="number"
+          value={tempToYear}
+          onChange={(e) => setTempToYear(e.target.value)}
+          placeholder="To Year"
+          className={styles.input}
+        />
+        <button
+          className={styles.button}
+          onClick={() => {
+            setFromYear(tempFromYear);
+            setToYear(tempToYear);
+            fetchDocumentsByYear();
+          }}
+        >
+          Apply
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className={styles.filters}>
+        <input
           type="text"
-          placeholder="Search companies, founders, or documents..."
+          placeholder="Search companies or documents..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={styles.input}
         />
+
+        <select
+          value={stageFilter}
+          onChange={(e) => setStageFilter(e.target.value)}
+          className={styles.select}
+        >
+          <option value="all">All Stages</option>
+          <option value="1">Pre-Seed</option>
+          <option value="2">Seed</option>
+          <option value="3">Early Stage</option>
+          <option value="4">Growth Stage</option>
+          <option value="5">Expansion Stage</option>
+        </select>
 
         <select
           value={statusFilter}
@@ -110,19 +162,9 @@ export default function DocumentTable() {
           <option value="overdue">Overdue</option>
           <option value="approved">Approved</option>
         </select>
-
-        <select
-          value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.value)}
-          className={styles.select}
-        >
-          <option value="all">All Stages</option>
-          <option value="pre-Series">Pre-Series</option>
-          <option value="Series-a">Series A</option>
-          <option value="Series-b">Series B</option>
-        </select>
       </div>
 
+      {/* Table */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -130,60 +172,65 @@ export default function DocumentTable() {
               <th>Company</th>
               <th>Document Category</th>
               <th>Document Subcategory</th>
-              <th>Founder</th>
+              <th>Document Name</th>
               <th>Stage</th>
               <th>Submission Date</th>
               <th>Due Date</th>
               <th>Status</th>
-
-              {/* <th>Document Sub Category</th> */}
               <th className={styles.textRight}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item) => (
-              <tr
-                key={item.id}
-                className={
-                  isOverdue(item.dueDate, item.status) ? styles.overdueRow : ""
-                }
-              >
-                <td>{item.companyName}</td>
-                <td>{item.documentType}</td>
-                <td>{item.documentSubCategory}</td>
-                <td>{item.founder}</td>
-                <td>
-                  <span className={`${styles.badge} ${styles[item.stage]}`}>
-                    {item.stage.toUpperCase()}
-                  </span>
-                </td>
-                <td>
-                  {item.submissionDate === "-"
-                    ? "Not submitted"
-                    : new Date(item.submissionDate).toLocaleDateString()}
-                </td>
-                <td
+            {filteredData.map((item, idx) => {
+              const statusNormalized = (item.status || "").toLowerCase();
+
+              return (
+                <tr
+                  key={`${item.incubateesname}-${item.documentname}-${idx}`}
                   className={
-                    isOverdue(item.dueDate, item.status)
-                      ? styles.dueOverdue
-                      : ""
+                    statusNormalized === "overdue" ? styles.overdueRow : ""
                   }
                 >
-                  {new Date(item.dueDate).toLocaleDateString()}
-                </td>
-                <td>
-                  <span className={`${styles.badge} ${styles[item.status]}`}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                  </span>
-                </td>
-                <td className={styles.textRight}>
-                  <NavLink to={`/startup/Dashboard/${item.companyName}`}>
-                    {/* NavLink */}
-                    <button className={styles.buttonSmall}>View</button>
-                  </NavLink>
-                </td>
-              </tr>
-            ))}
+                  <td>{item.incubateesname}</td>
+                  <td>{item.doccatname}</td>
+                  <td>{item.docsubcatname}</td>
+                  <td>{item.documentname}</td>
+                  <td>
+                    <span
+                      className={`${styles.badge} ${
+                        styles[item.incubateesstagelevel]
+                      }`}
+                    >
+                      {getStageName(item.incubateesstagelevel)}
+                    </span>
+                  </td>
+                  <td>
+                    {item.submission_date
+                      ? formatDate(item.submission_date)
+                      : "Not submitted"}
+                  </td>
+                  <td
+                    className={
+                      statusNormalized === "overdue" ? styles.dueOverdue : ""
+                    }
+                  >
+                    {formatDate(item.due_date)}
+                  </td>
+                  <td>
+                    <span
+                      className={`${styles.badge} ${styles[statusNormalized]}`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className={styles.textRight}>
+                    <NavLink to={`/startup/Dashboard/${item.incubateesname}`}>
+                      <button className={styles.buttonSmall}>View</button>
+                    </NavLink>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
