@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
+import { useNavigate } from "react-router-dom";
 import {
   Link,
   NavLink,
@@ -21,18 +22,38 @@ import {
   Building,
   TrendingUp,
   Plus,
+  LogOut,
 } from "lucide-react";
 import ITELLogo from "../../assets/ITEL_Logo.png";
 
 import { DataContext } from "../Datafetching/DataProvider";
+import DocumentTable from "../DocumentTable";
 // import api from "./Datafetching/api";
 
 const StartupDashboard = () => {
-  const { roleid, listOfIncubatees, companyDoc } = useContext(DataContext);
+  const {
+    roleid,
+    listOfIncubatees,
+    companyDoc,
+    startupcompanyDoc,
+    startupdetails,
+  } = useContext(DataContext);
   console.log(roleid);
   console.log(listOfIncubatees);
   console.log(companyDoc);
+  console.log(startupcompanyDoc);
+  console.log(startupdetails);
   const location = useLocation();
+
+  const navigate = useNavigate();
+  const { id } = useParams(); // 👈 gets the company ID from URL
+  const [searchparams, setsearchparams] = useSearchParams();
+  console.log(searchparams);
+  const founder = searchparams.get("founder");
+  // const lng = searchparams.get("lng");
+  console.log(id);
+  console.log(founder);
+  console.log("Current path:", location.pathname);
 
   const incubatee = listOfIncubatees?.[0]; // take first incubatee safely
 
@@ -43,15 +64,15 @@ const StartupDashboard = () => {
   const incubateesdateofincubation = incubatee?.incubateesdateofincubation;
   const incubateesfieldofworkname = incubatee?.incubateesfieldofworkname;
   const incubateesstagelevelname = incubatee?.incubateesstagelevelname;
-  const { id } = useParams(); // 👈 gets the company ID from URL
-  const [searchparams, setsearchparams] = useSearchParams();
-  console.log(searchparams);
-  const founder = searchparams.get("founder");
-  // const lng = searchparams.get("lng");
-  console.log(id);
-  console.log(founder);
-  console.log("Current path:", location.pathname);
+  const incubateesfoundername = incubatee?.incubateesfoundername;
+  const incubateesrecid = incubatee?.incubateesrecid;
+  const usersrecid = incubatee?.usersrecid;
 
+  const convertData = (dateStr) => {
+    const dateObj = new Date(dateStr);
+    const formatted = dateObj.toLocaleDateString("en-GB");
+    return formatted;
+  };
   // Documents state
   const [documents, setDocuments] = useState([
     {
@@ -116,7 +137,7 @@ const StartupDashboard = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "approved":
+      case "Submitted":
         return (
           <span className={`${styles.badge} ${styles.badgeApproved}`}>
             Submitted
@@ -128,7 +149,7 @@ const StartupDashboard = () => {
             Pending
           </span>
         );
-      case "overdue":
+      case "Overdue":
         return (
           <span className={`${styles.badge} ${styles.badgeOverdue}`}>
             Overdue
@@ -141,11 +162,11 @@ const StartupDashboard = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "approved":
+      case "Submitted":
         return <CheckCircle className={styles.iconApproved} />;
       case "pending":
         return <Clock className={styles.iconPending} />;
-      case "overdue":
+      case "Overdue":
         return <AlertCircle className={styles.iconOverdue} />;
       default:
         return <FileText className={styles.iconDefault} />;
@@ -154,6 +175,54 @@ const StartupDashboard = () => {
 
   const handleFileSelect = (e) => {
     setSelectedFile(e.target.files[0]);
+  };
+
+  const handleViewDocument = async (filepath) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const userid = sessionStorage.getItem("userid");
+
+      const response = await fetch(
+        "http://121.242.232.212:8086/itelinc/resources/generic/getfileurl",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userid: userid,
+            url: filepath,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.statusCode === 200 && data.data) {
+        // Open the PDF URL in new tab
+        window.open(data.data, "_blank");
+      }
+    } catch (error) {
+      console.error("Error fetching file:", error);
+      alert("Error loading file: " + error.message);
+    }
+  };
+
+  const handleLogout = () => {
+    // localStorage.removeItem("userid");
+    // localStorage.removeItem("token");
+    // localStorage.removeItem("roleid");
+
+    //session storage
+    sessionStorage.removeItem("userid");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("roleid");
+    navigate("/", { replace: true });
   };
 
   return (
@@ -186,10 +255,10 @@ const StartupDashboard = () => {
               <Settings className={styles.icon} />
             </button> */}
 
-            {/* <button className={style.btnPrimary}>
-              <Plus className={style.icon} />
-              Add Startup
-            </button> */}
+            <button className={style.btnPrimary} onClick={handleLogout}>
+              <LogOut className={style.icon} />
+              Logout
+            </button>
           </div>
         </div>
       </header>
@@ -218,7 +287,7 @@ const StartupDashboard = () => {
                 <div>
                   <h1 className="text-4xl font-bold mb-2">{incubateesname}</h1>
                 </div>
-                <div>
+                {/* <div>
                   <a
                     href="https://itelfoundation.in/"
                     target="_blank"
@@ -232,17 +301,18 @@ const StartupDashboard = () => {
                   >
                     <Building className="h-4 w-4 mr-2" /> View Website
                   </a>
-                </div>
+                </div> */}
               </div>
               <div>
                 <div className={styles.headerBadges}>
                   <div className={styles.headerBadge}>
-                    <Users className="h-4 w-4" /> Founded by Sarah Johnson
+                    <Users className="h-4 w-4" /> Founded by :{" "}
+                    {incubateesfoundername}
                   </div>
                   <div className={styles.headerBadge}>
                     <Calendar className="h-4 w-4" /> Date of Incorporation:
-                    {incubateesdateofincorporation}
-                    <span
+                    {convertData(incubateesdateofincorporation)}
+                    {/* <span
                       style={{
                         fontSize: "0.6rem",
                         border: "1px solid #74c0fc",
@@ -254,12 +324,12 @@ const StartupDashboard = () => {
                       }}
                     >
                       4yrs - 5months
-                    </span>
+                    </span> */}
                   </div>
                   <div className={styles.headerBadge}>
                     <Calendar className="h-4 w-4" /> Date of Incubation:
-                    {incubateesdateofincubation}
-                    <span
+                    {convertData(incubateesdateofincubation)}
+                    {/* <span
                       style={{
                         fontSize: "0.6rem",
                         border: "1px solid #74c0fc",
@@ -271,7 +341,7 @@ const StartupDashboard = () => {
                       }}
                     >
                       2yrs - 4months
-                    </span>
+                    </span> */}
                   </div>
                   <div className={styles.headerBadge}>
                     <TrendingUp className="h-4 w-4" />{" "}
@@ -367,6 +437,7 @@ const StartupDashboard = () => {
             Complete your document updatation by submitting all required
             documents
           </p>
+
           <br />
           {/* <div className="flex justify-between mb-1">
           <span>Overall Completion</span>
@@ -445,6 +516,68 @@ const StartupDashboard = () => {
               ))}
             </tbody>
           </table>
+
+          <br />
+          <br />
+          <table>
+            <thead>
+              <tr className="bg-gray-200">
+                <th>Document Category</th>
+                <th>Document SubCategory</th>
+                <th>Status</th>
+                <th>Upload Date</th>
+                <th>Due Date</th>
+                <th>{}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companyDoc.map((doc) => (
+                <tr
+                  key={`${doc.incubateesname}-${doc.doccatname}-${doc.docsubcatname}`}
+                  className={styles.tableRow}
+                >
+                  <td className="flex items-center gap-2">
+                    {getStatusIcon(doc.status)} {doc.doccatname}
+                  </td>
+                  <td className="flex items-center gap-2">
+                    {doc.docsubcatname}
+                  </td>
+                  <td>{getStatusBadge(doc.status)}</td>
+                  <td>
+                    {doc.submission_date ? (
+                      new Date(doc.submission_date).toLocaleDateString()
+                    ) : (
+                      <em>Not uploaded</em>
+                    )}
+                  </td>
+                  <td>
+                    {doc.due_date
+                      ? new Date(
+                          doc.due_date.replace("Z", "")
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </td>
+                  <td className="text-right">
+                    {doc.filepath && doc.status === "Submitted" ? (
+                      <button
+                        className={styles.buttonPrimary}
+                        onClick={() => handleViewDocument(doc.filepath)}
+                      >
+                        View Doc
+                      </button>
+                    ) : (
+                      <button
+                        className={styles.buttonPrimary}
+                        onClick={() => handleViewDocument(doc.filepath)}
+                      >
+                        View Doc
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* Add Document Modal */}
@@ -452,6 +585,8 @@ const StartupDashboard = () => {
           <DocumentUploadModal
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}
+            incubateesrecid={incubateesrecid}
+            usersrecid={usersrecid}
           />
         )}
       </div>

@@ -70,7 +70,7 @@ export default function CompanyTable({ companyList = [] }) {
               <th>Stage</th>
               <th>Date of Incorporation</th>
               <th>Date of Incubation</th>
-              <th className={styles.textRight}>Actions</th>
+              {/* <th className={styles.textRight}>Actions</th> */}
             </tr>
           </thead>
           <tbody>
@@ -101,11 +101,14 @@ export default function CompanyTable({ companyList = [] }) {
                       ).toLocaleDateString()
                     : "-"}
                 </td>
-                <td className={styles.textRight}>
-                  <NavLink to={`/startup/Dashboard/${item.incubateesname}`}>
+                {/* <td className={styles.textRight}>
+                  <NavLink
+                    to={`/startup/Dashboard/${item.usersrecid}`}
+                    state={{ companyData: item }} // Pass company data as state
+                  >
                     <button className={styles.buttonSmall}>View</button>
                   </NavLink>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

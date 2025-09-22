@@ -14,6 +14,7 @@ export default function DocumentTable() {
     setFromYear,
     setToYear,
     userid,
+    roleid,
     setCompanyDoc,
   } = useContext(DataContext);
 
@@ -23,6 +24,10 @@ export default function DocumentTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // You can make this configurable
 
   if (loading) return <p>Loading documents...</p>;
 
@@ -62,6 +67,18 @@ export default function DocumentTable() {
     return matchesSearch && matchesStage && matchesStatus;
   });
 
+  // Pagination calculations
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredData.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, stageFilter, statusFilter, itemsPerPage]);
+
   // Stage name mapping
   const getStageName = (level) => {
     switch (level) {
@@ -83,22 +100,83 @@ export default function DocumentTable() {
   const fetchDocumentsByYear = async () => {
     try {
       const res = await api.post("/generic/getcollecteddocsdash", {
-        userId: "ALL",
+        userId: Number(roleid) === 1 ? "ALL" : userid,
         startYear: tempFromYear,
         endYear: tempToYear,
       });
       setCompanyDoc(res.data.data);
+      setCurrentPage(1); // Reset to first page when year changes
       console.log(res.data.data);
     } catch (err) {
       console.error("Error fetching documents by year:", err);
     }
   };
 
+  // Page navigation functions
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than max visible
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first pages, current page, and last pages
+      if (currentPage <= 3) {
+        // Near the beginning
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Near the end
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // In the middle
+        pages.push(1);
+        pages.push("...");
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <h2>Document Submissions</h2>
-        <button className={styles.button}>Export</button>
+        {/* <button className={styles.button}>Export</button> */}
       </div>
 
       <div className={styles.filters}>
@@ -162,6 +240,18 @@ export default function DocumentTable() {
           <option value="overdue">Overdue</option>
           <option value="approved">Approved</option>
         </select>
+
+        {/* Items per page selector */}
+        <select
+          value={itemsPerPage}
+          onChange={(e) => setItemsPerPage(Number(e.target.value))}
+          className={styles.select}
+        >
+          <option value="5">5 per page</option>
+          <option value="10">10 per page</option>
+          <option value="20">20 per page</option>
+          <option value="50">50 per page</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -173,15 +263,16 @@ export default function DocumentTable() {
               <th>Document Category</th>
               <th>Document Subcategory</th>
               <th>Document Name</th>
-              <th>Stage</th>
+              {Number(roleid) === 1 ? <th>Stage</th> : ""}
+
               <th>Submission Date</th>
               <th>Due Date</th>
               <th>Status</th>
-              <th className={styles.textRight}>Actions</th>
+              {/* <th className={styles.textRight}>Actions</th> */}
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item, idx) => {
+            {currentItems.map((item, idx) => {
               const statusNormalized = (item.status || "").toLowerCase();
 
               return (
@@ -195,15 +286,19 @@ export default function DocumentTable() {
                   <td>{item.doccatname}</td>
                   <td>{item.docsubcatname}</td>
                   <td>{item.documentname}</td>
-                  <td>
-                    <span
-                      className={`${styles.badge} ${
-                        styles[item.incubateesstagelevel]
-                      }`}
-                    >
-                      {getStageName(item.incubateesstagelevel)}
-                    </span>
-                  </td>
+                  {Number(roleid) === 1 ? (
+                    <td>
+                      <span
+                        className={`${styles.badge} ${
+                          styles[item.incubateesstagelevel]
+                        }`}
+                      >
+                        {getStageName(item.incubateesstagelevel)}
+                      </span>
+                    </td>
+                  ) : (
+                    ""
+                  )}
                   <td>
                     {item.submission_date
                       ? formatDate(item.submission_date)
@@ -223,11 +318,11 @@ export default function DocumentTable() {
                       {item.status}
                     </span>
                   </td>
-                  <td className={styles.textRight}>
+                  {/* <td className={styles.textRight}>
                     <NavLink to={`/startup/Dashboard/${item.incubateesname}`}>
                       <button className={styles.buttonSmall}>View</button>
                     </NavLink>
-                  </td>
+                  </td> */}
                 </tr>
               );
             })}
@@ -240,6 +335,53 @@ export default function DocumentTable() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredData.length > 0 && (
+        <div className={styles.pagination}>
+          <div className={styles.paginationInfo}>
+            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of{" "}
+            {totalItems} entries
+          </div>
+
+          <div className={styles.paginationControls}>
+            <button
+              onClick={goToPrevPage}
+              disabled={currentPage === 1}
+              className={`${styles.pageButton} ${
+                currentPage === 1 ? styles.disabled : ""
+              }`}
+            >
+              Previous
+            </button>
+
+            {getPageNumbers().map((page, index) => (
+              <button
+                key={index}
+                onClick={() =>
+                  typeof page === "number" ? goToPage(page) : null
+                }
+                className={`${styles.pageButton} ${
+                  page === currentPage ? styles.active : ""
+                } ${typeof page !== "number" ? styles.ellipsis : ""}`}
+                disabled={typeof page !== "number"}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              className={`${styles.pageButton} ${
+                currentPage === totalPages ? styles.disabled : ""
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

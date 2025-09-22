@@ -10,7 +10,7 @@ import { DataContext } from "../Datafetching/DataProvider";
 const LoginForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { setUserid } = useContext(DataContext); // ✅ access setUserid
+  const { setUserid, setroleid } = useContext(DataContext); // ✅ access setUserid
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -39,6 +39,7 @@ const LoginForm = () => {
 
       // Update context so dashboard fetches data automatically
       setUserid(userid);
+      setroleid(roleid);
 
       // Redirect based on role
       if (roleid === "1") {

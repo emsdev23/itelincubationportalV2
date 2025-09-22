@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
+const DocumentUploadModal = ({
+  isModalOpen,
+  setIsModalOpen,
+  incubateesrecid,
+  usersrecid,
+}) => {
   // Get user ID from session storage
   const [userId, setUserId] = useState(null);
 
@@ -21,6 +26,9 @@ const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Date state
+  const [selectedDate, setSelectedDate] = useState("");
+
   // Get user ID from session storage when component mounts
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userid");
@@ -39,6 +47,7 @@ const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
       setSelectedSubCategory("");
       setSelectedDocInfo("");
       setSelectedFile(null);
+      setSelectedDate("");
       setError("");
       setSuccess("");
     }
@@ -231,14 +240,22 @@ const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
       // Convert file to base64
       const base64 = await convertToBase64(selectedFile);
 
+      // Format the date for API - use selected date or current date
+      const docfordate = selectedDate
+        ? new Date(selectedDate).toISOString().split("T")[0] + "T00:00:00"
+        : new Date().toISOString().split("T")[0] + "T00:00:00";
+
       const uploadData = {
         filebase64: base64,
-        userid: "32",
+        userid: usersrecid, // Use the actual userId from state instead of hardcoded "32"
+        incubaterecid: incubateesrecid,
         doccatid: parseInt(selectedCategory),
         docsubcatid: parseInt(selectedSubCategory),
         docid: parseInt(selectedDocInfo),
-        docfordate: new Date().toISOString().split("T")[0] + "T00:00:00",
+        docfordate: docfordate,
       };
+
+      console.log("Upload data:", uploadData); // For debugging
 
       const token = sessionStorage.getItem("token");
       const response = await fetch(
@@ -400,6 +417,22 @@ const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
           </div>
         )}
 
+        {/* Date Selector (only visible after document info is selected) */}
+        {selectedDocInfo && (
+          <div className="form-section">
+            <label className="form-label">Date of Incorporation</label>
+            <input
+              type="date"
+              className="form-dropdown"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            {selectedDate && (
+              <p className="date-preview">Selected date: {selectedDate}</p>
+            )}
+          </div>
+        )}
+
         {/* File Upload (only visible after document info is chosen) */}
         {selectedDocInfo && (
           <div className="form-section">
@@ -543,6 +576,13 @@ const DocumentUploadModal = ({ isModalOpen, setIsModalOpen }) => {
         .form-dropdown:disabled {
           background-color: #f5f5f5;
           color: #999;
+        }
+
+        .date-preview {
+          font-size: 0.85rem;
+          color: #666;
+          margin-top: 5px;
+          font-style: italic;
         }
 
         .file-drop-area {

@@ -12,6 +12,8 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
   const [selectedDocument, setSelectedDocument] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
 
+  const [selectedDate, setselectedDate] = useState(null);
+
   const token = sessionStorage.getItem("token"); // auth token
 
   // 1️⃣ Fetch categories when modal opens
@@ -121,7 +123,6 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
     <div className={styles.modalBackdrop}>
       <div className={styles.modalContent}>
         <h3 className="text-lg font-bold mb-4">Upload Document</h3>
-
         {/* Category Dropdown */}
         <div className={styles.accordionSection}>
           <label className="font-semibold">Select Category</label>
@@ -138,7 +139,6 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
             ))}
           </select>
         </div>
-
         {/* Subcategory Dropdown */}
         {selectedCategory && (
           <div className={styles.accordionSection}>
@@ -157,7 +157,6 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
             </select>
           </div>
         )}
-
         {/* Document Info Dropdown */}
         {selectedSubCategory && (
           <div className={styles.accordionSection}>
@@ -176,7 +175,6 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
             </select>
           </div>
         )}
-
         {/* File Upload */}
         {selectedDocument && (
           <div className={styles.accordionSection}>
@@ -195,7 +193,6 @@ const AddDocumentModal = ({ userid, onClose, onUploadSuccess }) => {
             </div>
           </div>
         )}
-
         {/* Buttons */}
         <div
           className="flex justify-end gap-2 mt-2"
