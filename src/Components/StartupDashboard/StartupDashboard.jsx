@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import styles from "./StartupDashboard.module.css";
-import companyLogo from "../../Images/FarmlandLogo.png";
+import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
 import {
   Link,
@@ -28,10 +28,21 @@ import { DataContext } from "../Datafetching/DataProvider";
 // import api from "./Datafetching/api";
 
 const StartupDashboard = () => {
-  const { roleid } = useContext(DataContext);
+  const { roleid, listOfIncubatees, companyDoc } = useContext(DataContext);
   console.log(roleid);
+  console.log(listOfIncubatees);
+  console.log(companyDoc);
   const location = useLocation();
 
+  const incubatee = listOfIncubatees?.[0]; // take first incubatee safely
+
+  // Now use optional chaining
+  const incubateesname = incubatee?.incubateesname;
+  const incubateesdateofincorporation =
+    incubatee?.incubateesdateofincorporation;
+  const incubateesdateofincubation = incubatee?.incubateesdateofincubation;
+  const incubateesfieldofworkname = incubatee?.incubateesfieldofworkname;
+  const incubateesstagelevelname = incubatee?.incubateesstagelevelname;
   const { id } = useParams(); // 👈 gets the company ID from URL
   const [searchparams, setsearchparams] = useSearchParams();
   console.log(searchparams);
@@ -191,25 +202,46 @@ const StartupDashboard = () => {
 
           <div className={styles.headerContent}>
             <div className={styles.headerFlex}>
-              <div className={styles.avatarWrapper}>
-                <img
-                  src={companyLogo}
-                  alt="Company Logo"
-                  className={styles.avatarImage}
-                />
-                <div className={styles.avatarStatus}>
-                  <CheckCircle className="h-5 w-5 text-white" />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "2rem" }}
+              >
+                <div className={styles.avatarWrapper}>
+                  <img
+                    src={companyLogo}
+                    alt="Company Logo"
+                    className={styles.avatarImage}
+                  />
+                  <div className={styles.avatarStatus}>
+                    <CheckCircle className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">{incubateesname}</h1>
+                </div>
+                <div>
+                  <a
+                    href="https://itelfoundation.in/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.buttonPrimary}
+                    style={{
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Building className="h-4 w-4 mr-2" /> View Website
+                  </a>
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold mb-2">{id}</h1>
                 <div className={styles.headerBadges}>
                   <div className={styles.headerBadge}>
                     <Users className="h-4 w-4" /> Founded by Sarah Johnson
                   </div>
                   <div className={styles.headerBadge}>
-                    <Calendar className="h-4 w-4" /> Date of Incorporation:Jan
-                    15, 2020
+                    <Calendar className="h-4 w-4" /> Date of Incorporation:
+                    {incubateesdateofincorporation}
                     <span
                       style={{
                         fontSize: "0.6rem",
@@ -225,8 +257,8 @@ const StartupDashboard = () => {
                     </span>
                   </div>
                   <div className={styles.headerBadge}>
-                    <Calendar className="h-4 w-4" /> Date of Incubation:Jan 15,
-                    2022{" "}
+                    <Calendar className="h-4 w-4" /> Date of Incubation:
+                    {incubateesdateofincubation}
                     <span
                       style={{
                         fontSize: "0.6rem",
@@ -242,27 +274,18 @@ const StartupDashboard = () => {
                     </span>
                   </div>
                   <div className={styles.headerBadge}>
-                    <TrendingUp className="h-4 w-4" /> Series A Funding
+                    <TrendingUp className="h-4 w-4" />{" "}
+                    {incubateesstagelevelname} Funding
+                  </div>
+                  <div className={styles.headerBadge}>
+                    {/* <TrendingUp className="h-4 w-4" />  */}
+                    Feild Of Work : {incubateesfieldofworkname}
                   </div>
                 </div>
               </div>
               <br />
             </div>
           </div>
-
-          <a
-            href="https://itelfoundation.in/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.buttonPrimary}
-            style={{
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-            }}
-          >
-            <Building className="h-4 w-4 mr-2" /> View Website
-          </a>
         </div>
 
         {/* Stats Cards */}
@@ -328,15 +351,15 @@ const StartupDashboard = () => {
             <h2 className="text-xl font-bold mb-2">
               Document Updatation Progress
             </h2>
-            {roleid !== 1 ? (
-              ""
-            ) : (
+            {Number(roleid) !== 1 ? (
               <button
                 className={styles.buttonPrimary}
                 onClick={() => setIsModalOpen(true)}
               >
                 <Upload className="h-4 w-4 mr-2" /> Add Document
               </button>
+            ) : (
+              ""
             )}
           </div>
 

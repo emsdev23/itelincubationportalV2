@@ -32,11 +32,13 @@ export const DataProvider = ({ children }) => {
             api.post("/generic/getcombyfield", { userId: userid }),
             api.post("/generic/getcombystage", { userId: userid }),
             api.post("/generic/getcollecteddocsdash", {
-              userId: "ALL",
+              userId: Number(roleid) === 1 ? "ALL" : userid,
               startYear: fromYear,
               endYear: toYear,
             }),
-            api.post("/generic/getincubatessdash", { userId: "ALL" }),
+            api.post("/generic/getincubatessdash", {
+              userId: Number(roleid) === 1 ? "ALL" : userid,
+            }),
           ]);
 
         setStats(statsRes.data.data);
