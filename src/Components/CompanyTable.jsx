@@ -6,6 +6,8 @@ import { NavLink } from "react-router-dom";
 export default function CompanyTable({ companyList = [] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // ✅ Deduplicate list by recid
   const uniqueCompanies = Array.from(
@@ -31,6 +33,63 @@ export default function CompanyTable({ companyList = [] }) {
 
     return matchesSearch && matchesStage;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, stageFilter]);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page
+  };
 
   return (
     <div className={styles.card}>
@@ -59,6 +118,23 @@ export default function CompanyTable({ companyList = [] }) {
           <option value="4">Growth Stage</option>
           <option value="5">Expansion Stage</option>
         </select>
+
+        <select
+          value={itemsPerPage}
+          onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+          className={styles.select}
+        >
+          <option value="5">5 per page</option>
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+        </select>
+      </div>
+
+      {/* Results info */}
+      <div className={styles.resultsInfo}>
+        Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of{" "}
+        {filteredData.length} entries
       </div>
 
       <div className={styles.tableWrapper}>
@@ -74,7 +150,7 @@ export default function CompanyTable({ companyList = [] }) {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item) => (
+            {currentData.map((item) => (
               <tr key={item.incubateesrecid}>
                 <td>{item.incubateesname}</td>
                 <td>{item.incubateesfieldofworkname}</td>
@@ -120,6 +196,48 @@ export default function CompanyTable({ companyList = [] }) {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button
+            className={`${styles.paginationBtn} ${
+              currentPage === 1 ? styles.disabled : ""
+            }`}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+
+          {getPageNumbers().map((page, index) => (
+            <React.Fragment key={index}>
+              {page === "..." ? (
+                <span className={styles.ellipsis}>...</span>
+              ) : (
+                <button
+                  className={`${styles.paginationBtn} ${styles.pageNumber} ${
+                    currentPage === page ? styles.active : ""
+                  }`}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </button>
+              )}
+            </React.Fragment>
+          ))}
+
+          <button
+            className={`${styles.paginationBtn} ${
+              currentPage === totalPages ? styles.disabled : ""
+            }`}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,11 +5,10 @@ const DocumentUploadModal = ({
   setIsModalOpen,
   incubateesrecid,
   usersrecid,
+  onUploadSuccess, // Add this prop
 }) => {
   // Get user ID from session storage
   const [userId, setUserId] = useState(null);
-
-  // Other state variables
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedDocInfo, setSelectedDocInfo] = useState("");
@@ -25,14 +24,11 @@ const DocumentUploadModal = ({
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  // Date state
   const [selectedDate, setSelectedDate] = useState("");
 
-  // Get user ID from session storage when component mounts
+  // ... all your existing useEffects remain the same ...
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userid");
-
     if (storedUserId) {
       setUserId(storedUserId);
     } else {
@@ -40,7 +36,6 @@ const DocumentUploadModal = ({
     }
   }, []);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isModalOpen) {
       setSelectedCategory("");
@@ -53,7 +48,6 @@ const DocumentUploadModal = ({
     }
   }, [isModalOpen]);
 
-  // Fetch categories when modal opens
   useEffect(() => {
     const fetchCategories = async () => {
       if (!isModalOpen || !userId) return;
@@ -99,7 +93,6 @@ const DocumentUploadModal = ({
     }
   }, [isModalOpen, userId]);
 
-  // Fetch subcategories when category is selected
   useEffect(() => {
     const fetchSubCategories = async () => {
       if (!selectedCategory || !userId) return;
@@ -154,7 +147,6 @@ const DocumentUploadModal = ({
     }
   }, [selectedCategory, userId]);
 
-  // Fetch document info when subcategory is selected
   useEffect(() => {
     const fetchDocInfo = async () => {
       if (!selectedSubCategory || !userId) return;
@@ -211,7 +203,6 @@ const DocumentUploadModal = ({
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         setError("File size must be less than 10MB");
         return;
@@ -221,6 +212,7 @@ const DocumentUploadModal = ({
     }
   };
 
+  // Modified handleUpload function
   const handleUpload = async () => {
     if (
       !selectedFile ||
@@ -237,17 +229,15 @@ const DocumentUploadModal = ({
     setSuccess("");
 
     try {
-      // Convert file to base64
       const base64 = await convertToBase64(selectedFile);
 
-      // Format the date for API - use selected date or current date
       const docfordate = selectedDate
         ? new Date(selectedDate).toISOString().split("T")[0] + "T00:00:00"
         : new Date().toISOString().split("T")[0] + "T00:00:00";
 
       const uploadData = {
         filebase64: base64,
-        userid: usersrecid, // Use the actual userId from state instead of hardcoded "32"
+        userid: usersrecid,
         incubaterecid: incubateesrecid,
         doccatid: parseInt(selectedCategory),
         docsubcatid: parseInt(selectedSubCategory),
@@ -255,7 +245,7 @@ const DocumentUploadModal = ({
         docfordate: docfordate,
       };
 
-      console.log("Upload data:", uploadData); // For debugging
+      console.log("Upload data:", uploadData);
 
       const token = sessionStorage.getItem("token");
       const response = await fetch(
@@ -277,6 +267,12 @@ const DocumentUploadModal = ({
       const data = await response.json();
       if (data.statusCode === 200) {
         setSuccess("Document uploaded successfully!");
+
+        // Call the onUploadSuccess callback to refresh the parent component
+        if (onUploadSuccess) {
+          await onUploadSuccess();
+        }
+
         setTimeout(() => {
           handleClose();
         }, 1500);
@@ -320,7 +316,6 @@ const DocumentUploadModal = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         setError("File size must be less than 10MB");
         return;
@@ -366,7 +361,7 @@ const DocumentUploadModal = ({
           )}
         </div>
 
-        {/* Subcategory (only visible after category is selected) */}
+        {/* Subcategory */}
         {selectedCategory && (
           <div className="form-section">
             <label className="form-label">Select Sub-Category</label>
@@ -389,7 +384,7 @@ const DocumentUploadModal = ({
           </div>
         )}
 
-        {/* Document Info (only visible after subcategory is selected) */}
+        {/* Document Info */}
         {selectedSubCategory && (
           <div className="form-section">
             <label className="form-label">Select Document Type</label>
@@ -417,7 +412,7 @@ const DocumentUploadModal = ({
           </div>
         )}
 
-        {/* Date Selector (only visible after document info is selected) */}
+        {/* Date Selector */}
         {selectedDocInfo && (
           <div className="form-section">
             <label className="form-label">Date of Incorporation</label>
@@ -433,7 +428,7 @@ const DocumentUploadModal = ({
           </div>
         )}
 
-        {/* File Upload (only visible after document info is chosen) */}
+        {/* File Upload */}
         {selectedDocInfo && (
           <div className="form-section">
             <label className="form-label">Upload File</label>

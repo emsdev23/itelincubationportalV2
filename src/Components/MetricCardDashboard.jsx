@@ -32,7 +32,7 @@ const MetricCardDashboard = ({ stats }) => {
 
         <MetricCard
           title="Total Networth"
-          value="₹0"
+          value={`₹${total_share} CR`}
           subtitle="Combined valuation"
           icon={<IndianRupee size={20} />}
           variant="success"

@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
@@ -28,7 +28,6 @@ import ITELLogo from "../../assets/ITEL_Logo.png";
 
 import { DataContext } from "../Datafetching/DataProvider";
 import DocumentTable from "../DocumentTable";
-// import api from "./Datafetching/api";
 
 const StartupDashboard = () => {
   const {
@@ -37,27 +36,18 @@ const StartupDashboard = () => {
     companyDoc,
     startupcompanyDoc,
     startupdetails,
+    refreshCompanyDocuments, // Add this from context if available
   } = useContext(DataContext);
-  console.log(roleid);
-  console.log(listOfIncubatees);
-  console.log(companyDoc);
-  console.log(startupcompanyDoc);
-  console.log(startupdetails);
+
   const location = useLocation();
-
   const navigate = useNavigate();
-  const { id } = useParams(); // 👈 gets the company ID from URL
+  const { id } = useParams();
   const [searchparams, setsearchparams] = useSearchParams();
-  console.log(searchparams);
   const founder = searchparams.get("founder");
-  // const lng = searchparams.get("lng");
-  console.log(id);
-  console.log(founder);
-  console.log("Current path:", location.pathname);
 
-  const incubatee = listOfIncubatees?.[0]; // take first incubatee safely
+  const incubatee = listOfIncubatees?.[0];
 
-  // Now use optional chaining
+  // Company details
   const incubateesname = incubatee?.incubateesname;
   const incubateesdateofincorporation =
     incubatee?.incubateesdateofincorporation;
@@ -68,12 +58,78 @@ const StartupDashboard = () => {
   const incubateesrecid = incubatee?.incubateesrecid;
   const usersrecid = incubatee?.usersrecid;
 
+  // Local state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [localCompanyDoc, setLocalCompanyDoc] = useState(companyDoc || []);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Update local state when context data changes
+  useEffect(() => {
+    setLocalCompanyDoc(companyDoc || []);
+  }, [companyDoc]);
+
   const convertData = (dateStr) => {
     const dateObj = new Date(dateStr);
     const formatted = dateObj.toLocaleDateString("en-GB");
     return formatted;
   };
-  // Documents state
+
+  // Manual refresh function to fetch company documents
+  const fetchCompanyDocuments = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const userid = sessionStorage.getItem("userid");
+
+      // Replace with your actual API endpoint for fetching company documents
+      const response = await fetch(
+        "http://121.242.232.212:8086/itelinc/resources/generic/getcompanydocs", // Update this URL
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userid: userid,
+            incubateesrecid: incubateesrecid,
+            // Add other required parameters based on your API
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        setLocalCompanyDoc(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching company documents:", error);
+    }
+  };
+
+  // Handle document upload success
+  const handleDocumentUpload = async () => {
+    try {
+      // Option 1: Use context refresh function if available
+      if (refreshCompanyDocuments) {
+        await refreshCompanyDocuments();
+      } else {
+        // Option 2: Manually fetch updated documents
+        await fetchCompanyDocuments();
+      }
+    } catch (error) {
+      console.error("Error refreshing documents:", error);
+      // Fallback: reload page if API calls fail
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+  };
+
+  // Documents state (this seems to be dummy data, using actual data from API)
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -117,23 +173,18 @@ const StartupDashboard = () => {
     },
   ]);
 
-  // Modal state - use only one state for the modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-
-  const totalDocuments = documents.length;
-  const approvedDocuments = documents.filter(
-    (d) => d.status === "approved"
-  ).length;
-  const pendingDocuments = documents.filter(
-    (d) => d.status === "pending"
-  ).length;
-  const overdueDocuments = documents.filter(
-    (d) => d.status === "overdue"
-  ).length;
-  const completionRate = (approvedDocuments / totalDocuments) * 100;
+  // Calculate stats based on actual API data (localCompanyDoc)
+  const totalDocuments = localCompanyDoc.length || documents.length;
+  const submittedDocuments =
+    localCompanyDoc.filter((d) => d.status === "Submitted").length ||
+    documents.filter((d) => d.status === "approved").length;
+  const pendingDocuments =
+    localCompanyDoc.filter((d) => d.status === "pending").length ||
+    documents.filter((d) => d.status === "pending").length;
+  const overdueDocuments =
+    localCompanyDoc.filter((d) => d.status === "Overdue").length ||
+    documents.filter((d) => d.status === "overdue").length;
+  const completionRate = (submittedDocuments / totalDocuments) * 100 || 0;
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -173,10 +224,6 @@ const StartupDashboard = () => {
     }
   };
 
-  const handleFileSelect = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
-
   const handleViewDocument = async (filepath) => {
     try {
       const token = sessionStorage.getItem("token");
@@ -204,7 +251,6 @@ const StartupDashboard = () => {
       const data = await response.json();
 
       if (data.statusCode === 200 && data.data) {
-        // Open the PDF URL in new tab
         window.open(data.data, "_blank");
       }
     } catch (error) {
@@ -214,11 +260,6 @@ const StartupDashboard = () => {
   };
 
   const handleLogout = () => {
-    // localStorage.removeItem("userid");
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("roleid");
-
-    //session storage
     sessionStorage.removeItem("userid");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("roleid");
@@ -227,34 +268,18 @@ const StartupDashboard = () => {
 
   return (
     <div>
-      {/* nav bar */}
+      {/* Navigation bar */}
       <header className={style.header}>
         <div className={style.container}>
-          {/* Left - Logo + Title */}
           <div className={style.logoSection}>
-            <img src={ITELLogo} className={style.logoIcon} />
-            {/* <Building2 className={styles.logoIcon} /> */}
+            <img src={ITELLogo} className={style.logoIcon} alt="ITEL Logo" />
             <div>
               <h1 className={style.title}>ITEL Incubation Portal</h1>
               <p className={style.subtitle}>Startup Management Dashboard</p>
             </div>
           </div>
 
-          {location.pathname === "/startup/Dashboard" && <p></p>}
-
-          {/* Right - Actions */}
           <div className={style.actions}>
-            {/* <button className={`${styles.btn} ${styles.btnOutline}`}>
-              <Search className={styles.icon} />
-              Search
-            </button>
-            <button className={`${styles.btn} ${styles.btnOutline}`}>
-              <Bell className={styles.icon} />
-            </button>
-            <button className={`${styles.btn} ${styles.btnOutline}`}>
-              <Settings className={styles.icon} />
-            </button> */}
-
             <button className={style.btnPrimary} onClick={handleLogout}>
               <LogOut className={style.icon} />
               Logout
@@ -263,12 +288,10 @@ const StartupDashboard = () => {
         </div>
       </header>
 
-      {/* startup dashboard */}
+      {/* Startup dashboard */}
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.headerCard}>
-          {/* <div className={styles.headerOverlay}></div> */}
-
           <div className={styles.headerContent}>
             <div className={styles.headerFlex}>
               <div
@@ -287,73 +310,32 @@ const StartupDashboard = () => {
                 <div>
                   <h1 className="text-4xl font-bold mb-2">{incubateesname}</h1>
                 </div>
-                {/* <div>
-                  <a
-                    href="https://itelfoundation.in/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.buttonPrimary}
-                    style={{
-                      textDecoration: "none",
-                      display: "inline-flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Building className="h-4 w-4 mr-2" /> View Website
-                  </a>
-                </div> */}
               </div>
               <div>
                 <div className={styles.headerBadges}>
                   <div className={styles.headerBadge}>
-                    <Users className="h-4 w-4" /> Founded by :{" "}
+                    <Users className="h-4 w-4" /> Founded by:{" "}
                     {incubateesfoundername}
                   </div>
                   <div className={styles.headerBadge}>
                     <Calendar className="h-4 w-4" /> Date of Incorporation:
-                    {convertData(incubateesdateofincorporation)}
-                    {/* <span
-                      style={{
-                        fontSize: "0.6rem",
-                        border: "1px solid #74c0fc",
-                        background: "#74c0fc",
-                        padding: "0.3rem",
-                        borderRadius: "1rem",
-                        color: "#343a40",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      4yrs - 5months
-                    </span> */}
+                    {incubateesdateofincorporation &&
+                      convertData(incubateesdateofincorporation)}
                   </div>
                   <div className={styles.headerBadge}>
                     <Calendar className="h-4 w-4" /> Date of Incubation:
-                    {convertData(incubateesdateofincubation)}
-                    {/* <span
-                      style={{
-                        fontSize: "0.6rem",
-                        border: "1px solid #74c0fc",
-                        background: "#74c0fc",
-                        padding: "0.3rem",
-                        borderRadius: "1rem",
-                        color: "#343a40",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      2yrs - 4months
-                    </span> */}
+                    {incubateesdateofincubation &&
+                      convertData(incubateesdateofincubation)}
                   </div>
                   <div className={styles.headerBadge}>
                     <TrendingUp className="h-4 w-4" />{" "}
                     {incubateesstagelevelname} Funding
                   </div>
                   <div className={styles.headerBadge}>
-                    {/* <TrendingUp className="h-4 w-4" />  */}
-                    Feild Of Work : {incubateesfieldofworkname}
+                    Field Of Work: {incubateesfieldofworkname}
                   </div>
                 </div>
               </div>
-              <br />
             </div>
           </div>
         </div>
@@ -372,17 +354,16 @@ const StartupDashboard = () => {
               <div className={styles.cardTitle}>Submitted</div>
               <div
                 className={styles.tooltip}
-                data-tooltip="Documents that have been  submitted in the portal"
+                data-tooltip="Documents that have been submitted in the portal"
               >
                 <CheckCircle className={styles.iconApproved} />
               </div>
             </div>
-            <div className={styles.cardContent}>{approvedDocuments}</div>
+            <div className={styles.cardContent}>{submittedDocuments}</div>
           </div>
-
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Pending </div>
+              <div className={styles.cardTitle}>Pending</div>
               <div
                 className={styles.tooltip}
                 data-tooltip="Monthly due Documents"
@@ -392,17 +373,9 @@ const StartupDashboard = () => {
             </div>
             <div className={styles.cardContent}>{pendingDocuments}</div>
           </div>
-
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Overdue</div>
-
-              {/* <div
-              className={styles.tooltip}
-              data-tooltip="Documents has  not been updated  for months"
-            >
-              
-            </div> */}
               <AlertCircle className={styles.iconOverdue} />
             </div>
             <div className={styles.cardContent}>{overdueDocuments}</div>
@@ -418,31 +391,22 @@ const StartupDashboard = () => {
               justifyContent: "space-between",
             }}
           >
-            <h2 className="text-xl font-bold mb-2">
-              Document Updatation Progress
-            </h2>
-            {Number(roleid) !== 1 ? (
+            <h2 className="text-xl font-bold mb-2">Document Update Progress</h2>
+            {Number(roleid) !== 1 && (
               <button
                 className={styles.buttonPrimary}
                 onClick={() => setIsModalOpen(true)}
               >
                 <Upload className="h-4 w-4 mr-2" /> Add Document
               </button>
-            ) : (
-              ""
             )}
           </div>
 
           <p className="text-gray-600 mb-2">
-            Complete your document updatation by submitting all required
-            documents
+            Complete your document updates by submitting all required documents
           </p>
 
           <br />
-          {/* <div className="flex justify-between mb-1">
-          <span>Overall Completion</span>
-          <span>{Math.round(completionRate)}%</span>
-        </div> */}
           <div className={styles.progressBarContainer}>
             <div
               className={styles.progressBar}
@@ -461,7 +425,7 @@ const StartupDashboard = () => {
               className={`${styles.progressStat} ${styles.progressApproved}`}
             >
               <div className={styles.progressDot}></div>
-              <div>{approvedDocuments} Submitted</div>
+              <div>{submittedDocuments} Submitted</div>
             </div>
             <div className={`${styles.progressStat} ${styles.progressPending}`}>
               <div className={styles.progressDot}></div>
@@ -476,15 +440,6 @@ const StartupDashboard = () => {
 
         {/* Documents Table */}
         <div className={styles.documentsTableFull}>
-          <div className="flex justify-between mb-4">
-            {/* <h2 className="text-xl font-bold">Document Management</h2> */}
-            {/* <button
-            className={styles.buttonPrimary}
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Upload className="h-4 w-4 mr-2" /> Add Document
-          </button> */}
-          </div>
           <table>
             <thead>
               <tr className="bg-gray-200">
@@ -493,47 +448,13 @@ const StartupDashboard = () => {
                 <th>Status</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
-                {/* <th>Actions</th> */}
-                <th> </th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {documents.map((doc) => (
-                <tr key={doc.id} className={styles.tableRow}>
-                  <td className="flex items-center gap-2">
-                    {getStatusIcon(doc.status)} {doc.name}
-                  </td>
-                  <td className="flex items-center gap-2">
-                    {doc.documentSubCategory}
-                  </td>
-                  <td>{getStatusBadge(doc.status)}</td>
-                  <td>{doc.uploadDate || <em>Not uploaded</em>}</td>
-                  <td>{doc.dueDate}</td>
-                  <td className="text-right">
-                    <button className={styles.buttonPrimary}>View Doc</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <br />
-          <br />
-          <table>
-            <thead>
-              <tr className="bg-gray-200">
-                <th>Document Category</th>
-                <th>Document SubCategory</th>
-                <th>Status</th>
-                <th>Upload Date</th>
-                <th>Due Date</th>
-                <th>{}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companyDoc.map((doc) => (
+              {localCompanyDoc.map((doc, index) => (
                 <tr
-                  key={`${doc.incubateesname}-${doc.doccatname}-${doc.docsubcatname}`}
+                  key={`${doc.incubateesname}-${doc.doccatname}-${doc.docsubcatname}-${index}`}
                   className={styles.tableRow}
                 >
                   <td className="flex items-center gap-2">
@@ -569,8 +490,9 @@ const StartupDashboard = () => {
                       <button
                         className={styles.buttonPrimary}
                         onClick={() => handleViewDocument(doc.filepath)}
+                        disabled={!doc.filepath}
                       >
-                        View Doc
+                        {doc.filepath ? "View Doc" : "No File"}
                       </button>
                     )}
                   </td>
@@ -587,6 +509,7 @@ const StartupDashboard = () => {
             setIsModalOpen={setIsModalOpen}
             incubateesrecid={incubateesrecid}
             usersrecid={usersrecid}
+            onUploadSuccess={handleDocumentUpload}
           />
         )}
       </div>
