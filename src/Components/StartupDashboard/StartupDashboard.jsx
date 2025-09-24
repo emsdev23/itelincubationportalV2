@@ -23,6 +23,12 @@ import {
   TrendingUp,
   Plus,
   LogOut,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ArrowLeft,
+  CircleUserRound,
 } from "lucide-react";
 import ITELLogo from "../../assets/ITEL_Logo.png";
 
@@ -36,16 +42,51 @@ const StartupDashboard = () => {
     companyDoc,
     startupcompanyDoc,
     startupdetails,
-    refreshCompanyDocuments, // Add this from context if available
+    setadminviewData,
+    refreshCompanyDocuments,
+    adminStartupLoading,
+    adminviewData,
   } = useContext(DataContext);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // Set the adminviewData when component mounts or id changes
+  useEffect(() => {
+    if (id) {
+      setadminviewData(id);
+    }
+  }, [id, setadminviewData]);
+
   const [searchparams, setsearchparams] = useSearchParams();
   const founder = searchparams.get("founder");
 
-  const incubatee = listOfIncubatees?.[0];
+  // Determine which data to use based on role and admin viewing state
+  const getIncubateeData = () => {
+    if (Number(roleid) === 1 && adminviewData) {
+      // Admin viewing specific startup - use startupdetails
+      return startupdetails?.[0];
+    } else if (Number(roleid) === 4) {
+      // Regular user - use listOfIncubatees
+      return listOfIncubatees?.[0];
+    }
+    return null;
+  };
+
+  const getCompanyDocuments = () => {
+    if (Number(roleid) === 1 && adminviewData) {
+      // Admin viewing specific startup - use startupcompanyDoc
+      return startupcompanyDoc || [];
+    } else if (Number(roleid) === 4) {
+      // Regular user - use companyDoc
+      return companyDoc || [];
+    }
+    return [];
+  };
+
+  const incubatee = getIncubateeData();
+  const documentsData = getCompanyDocuments();
 
   // Company details
   const incubateesname = incubatee?.incubateesname;
@@ -57,16 +98,49 @@ const StartupDashboard = () => {
   const incubateesfoundername = incubatee?.incubateesfoundername;
   const incubateesrecid = incubatee?.incubateesrecid;
   const usersrecid = incubatee?.usersrecid;
+  const founderName = incubatee?.incubateesfoundername;
 
   // Local state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [localCompanyDoc, setLocalCompanyDoc] = useState(companyDoc || []);
+  const [localCompanyDoc, setLocalCompanyDoc] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Filter and pagination state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Update local state when context data changes
   useEffect(() => {
-    setLocalCompanyDoc(companyDoc || []);
-  }, [companyDoc]);
+    setLocalCompanyDoc(documentsData);
+  }, [documentsData]);
+
+  // Show loading state when admin is fetching startup data
+  if (
+    adminStartupLoading ||
+    (Number(roleid) === 1 && adminviewData && !incubatee)
+  ) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg">Loading startup data...</div>
+      </div>
+    );
+  }
+
+  // Show message if no data is available
+  if (!incubatee) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-lg text-gray-600">
+          {Number(roleid) === 1
+            ? "Please select a startup to view from the admin panel."
+            : "No startup data found."}
+        </div>
+      </div>
+    );
+  }
 
   const convertData = (dateStr) => {
     const dateObj = new Date(dateStr);
@@ -74,15 +148,42 @@ const StartupDashboard = () => {
     return formatted;
   };
 
+  // Get unique categories and statuses for filters
+  const uniqueCategories = [
+    ...new Set(localCompanyDoc.map((doc) => doc.doccatname)),
+  ];
+  const uniqueStatuses = [...new Set(localCompanyDoc.map((doc) => doc.status))];
+
+  // Filter documents based on search term and filters
+  const filteredDocuments = localCompanyDoc.filter((doc) => {
+    const matchesSearch =
+      doc.doccatname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.docsubcatname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.status?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
+    const matchesCategory =
+      categoryFilter === "all" || doc.doccatname === categoryFilter;
+
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDocuments = filteredDocuments.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   // Manual refresh function to fetch company documents
   const fetchCompanyDocuments = async () => {
     try {
       const token = sessionStorage.getItem("token");
       const userid = sessionStorage.getItem("userid");
 
-      // Replace with your actual API endpoint for fetching company documents
       const response = await fetch(
-        "http://121.242.232.212:8086/itelinc/resources/generic/getcompanydocs", // Update this URL
+        "http://121.242.232.212:8086/itelinc/resources/generic/getcompanydocs",
         {
           method: "POST",
           headers: {
@@ -92,7 +193,6 @@ const StartupDashboard = () => {
           body: JSON.stringify({
             userid: userid,
             incubateesrecid: incubateesrecid,
-            // Add other required parameters based on your API
           }),
         }
       );
@@ -113,78 +213,37 @@ const StartupDashboard = () => {
   // Handle document upload success
   const handleDocumentUpload = async () => {
     try {
-      // Option 1: Use context refresh function if available
       if (refreshCompanyDocuments) {
         await refreshCompanyDocuments();
       } else {
-        // Option 2: Manually fetch updated documents
         await fetchCompanyDocuments();
       }
+      // Reset filters and pagination after upload
+      setSearchTerm("");
+      setStatusFilter("all");
+      setCategoryFilter("all");
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error refreshing documents:", error);
-      // Fallback: reload page if API calls fail
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     }
   };
 
-  // Documents state (this seems to be dummy data, using actual data from API)
-  const [documents, setDocuments] = useState([
-    {
-      id: 1,
-      name: "Certificate of Incorporation",
-      documentSubCategory: "ROC Filing",
-      status: "approved",
-      uploadDate: "2024-01-15",
-      dueDate: "2024-02-15",
-    },
-    {
-      id: 2,
-      name: "Business Plan",
-      documentSubCategory: "Financial Projections",
-      status: "pending",
-      uploadDate: "2024-01-20",
-      dueDate: "2024-02-20",
-    },
-    {
-      id: 3,
-      name: "Financial Statements",
-      documentSubCategory: "Balance Sheet",
-      status: "overdue",
-      uploadDate: null,
-      dueDate: "2024-01-30",
-    },
-    {
-      id: 4,
-      name: "Tax Registration",
-      documentSubCategory: "GST Registration",
-      status: "approved",
-      uploadDate: "2024-01-10",
-      dueDate: "2024-02-10",
-    },
-    {
-      id: 5,
-      name: "Founder Agreements",
-      documentSubCategory: "Shareholder Agreement",
-      status: "pending",
-      uploadDate: "2024-01-25",
-      dueDate: "2024-02-25",
-    },
-  ]);
-
   // Calculate stats based on actual API data (localCompanyDoc)
-  const totalDocuments = localCompanyDoc.length || documents.length;
-  const submittedDocuments =
-    localCompanyDoc.filter((d) => d.status === "Submitted").length ||
-    documents.filter((d) => d.status === "approved").length;
-  const pendingDocuments =
-    localCompanyDoc.filter((d) => d.status === "pending").length ||
-    documents.filter((d) => d.status === "pending").length;
-  const overdueDocuments =
-    localCompanyDoc.filter((d) => d.status === "Overdue").length ||
-    documents.filter((d) => d.status === "overdue").length;
-  const completionRate = (submittedDocuments / totalDocuments) * 100 || 0;
+  const totalDocuments = localCompanyDoc.length;
+  const submittedDocuments = localCompanyDoc.filter(
+    (d) => d.status === "Submitted"
+  ).length;
+  const pendingDocuments = localCompanyDoc.filter(
+    (d) => d.status === "Pending"
+  ).length;
+  const overdueDocuments = localCompanyDoc.filter(
+    (d) => d.status === "Overdue"
+  ).length;
+  const completionRate =
+    totalDocuments > 0 ? (submittedDocuments / totalDocuments) * 100 : 0;
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -194,7 +253,7 @@ const StartupDashboard = () => {
             Submitted
           </span>
         );
-      case "pending":
+      case "Pending":
         return (
           <span className={`${styles.badge} ${styles.badgePending}`}>
             Pending
@@ -215,7 +274,7 @@ const StartupDashboard = () => {
     switch (status) {
       case "Submitted":
         return <CheckCircle className={styles.iconApproved} />;
-      case "pending":
+      case "Pending":
         return <Clock className={styles.iconPending} />;
       case "Overdue":
         return <AlertCircle className={styles.iconOverdue} />;
@@ -266,6 +325,35 @@ const StartupDashboard = () => {
     navigate("/", { replace: true });
   };
 
+  const handleBackToAdmin = () => {
+    navigate("/Incubation/Dashboard");
+  };
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setCurrentPage(1);
+  };
+
   return (
     <div>
       {/* Navigation bar */}
@@ -275,18 +363,71 @@ const StartupDashboard = () => {
             <img src={ITELLogo} className={style.logoIcon} alt="ITEL Logo" />
             <div>
               <h1 className={style.title}>ITEL Incubation Portal</h1>
-              <p className={style.subtitle}>Startup Management Dashboard</p>
+              <p className={style.subtitle}>
+                {Number(roleid) === 1
+                  ? "Admin Dashboard"
+                  : "Startup Management Dashboard"}
+              </p>
             </div>
           </div>
 
           <div className={style.actions}>
-            <button className={style.btnPrimary} onClick={handleLogout}>
+            {/* Show back button for admin */}
+            {Number(roleid) === 1 && adminviewData && (
+              <button
+                className={style.btnPrimary}
+                onClick={handleBackToAdmin}
+                style={{
+                  background: "#ff922b",
+                  display: "flex",
+                  fontWeight: "bold",
+                  color: "#d9480f",
+                }}
+              >
+                <ArrowLeft className={style.icon} />
+                Back to Portal
+              </button>
+            )}
+            <button
+              className={style.btnPrimary}
+              onClick={handleLogout}
+              style={{ background: "#0ca678", fontWeight: "bold" }}
+            >
               <LogOut className={style.icon} />
               Logout
             </button>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                // gap: "0.5rem",
+                fontSize: "0.8rem",
+                color: "gray",
+              }}
+            >
+              <CircleUserRound />
+              <div>{founderName}</div>
+              {/* <div>
+                <div>
+                  
+                </div>
+
+               
+              </div> */}
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Admin indicator */}
+      {/* {Number(roleid) === 1 && adminviewData && (
+        <div className="mb-4 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 mx-6">
+          <p className="font-medium">Admin View Mode</p>
+          <p className="text-sm">Viewing startup data for: {incubateesname}</p>
+        </div>
+      )} */}
 
       {/* Startup dashboard */}
       <div className={styles.container}>
@@ -392,7 +533,8 @@ const StartupDashboard = () => {
             }}
           >
             <h2 className="text-xl font-bold mb-2">Document Update Progress</h2>
-            {Number(roleid) !== 1 && (
+            {/* Only show Add Document button for users (roleid=4), not for admins (roleid=1) */}
+            {Number(roleid) === 4 && (
               <button
                 className={styles.buttonPrimary}
                 onClick={() => setIsModalOpen(true)}
@@ -403,7 +545,9 @@ const StartupDashboard = () => {
           </div>
 
           <p className="text-gray-600 mb-2">
-            Complete your document updates by submitting all required documents
+            {Number(roleid) === 1
+              ? "Viewing document update progress for this startup"
+              : "Complete your document updates by submitting all required documents"}
           </p>
 
           <br />
@@ -438,6 +582,62 @@ const StartupDashboard = () => {
           </div>
         </div>
 
+        {/* Filter Section */}
+        <div className={styles.filterSection}>
+          <div className={styles.filterGroup}>
+            <div className={styles.searchBox}>
+              <Search className={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search documents..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={styles.searchInput}
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={styles.filterSelect}
+            >
+              <option value="all">All Statuses</option>
+              {uniqueStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={styles.filterSelect}
+            >
+              <option value="all">All Categories</option>
+              {uniqueCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.resultsInfo}>
+            Showing {paginatedDocuments.length} of {filteredDocuments.length}{" "}
+            documents (filtered from {localCompanyDoc.length} total)
+          </div>
+        </div>
+
         {/* Documents Table */}
         <div className={styles.documentsTableFull}>
           <table>
@@ -448,62 +648,132 @@ const StartupDashboard = () => {
                 <th>Status</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
-                <th>Action</th>
+                <th>{}</th>
               </tr>
             </thead>
             <tbody>
-              {localCompanyDoc.map((doc, index) => (
-                <tr
-                  key={`${doc.incubateesname}-${doc.doccatname}-${doc.docsubcatname}-${index}`}
-                  className={styles.tableRow}
-                >
-                  <td className="flex items-center gap-2">
-                    {getStatusIcon(doc.status)} {doc.doccatname}
-                  </td>
-                  <td className="flex items-center gap-2">
-                    {doc.docsubcatname}
-                  </td>
-                  <td>{getStatusBadge(doc.status)}</td>
-                  <td>
-                    {doc.submission_date ? (
-                      new Date(doc.submission_date).toLocaleDateString()
-                    ) : (
-                      <em>Not uploaded</em>
-                    )}
-                  </td>
-                  <td>
-                    {doc.due_date
-                      ? new Date(
-                          doc.due_date.replace("Z", "")
-                        ).toLocaleDateString()
-                      : "N/A"}
-                  </td>
-                  <td className="text-right">
-                    {doc.filepath && doc.status === "Submitted" ? (
-                      <button
-                        className={styles.buttonPrimary}
-                        onClick={() => handleViewDocument(doc.filepath)}
-                      >
-                        View Doc
-                      </button>
-                    ) : (
-                      <button
-                        className={styles.buttonPrimary}
-                        onClick={() => handleViewDocument(doc.filepath)}
-                        disabled={!doc.filepath}
-                      >
-                        {doc.filepath ? "View Doc" : "No File"}
-                      </button>
-                    )}
+              {paginatedDocuments.length > 0 ? (
+                paginatedDocuments.map((doc, index) => (
+                  <tr
+                    key={`${doc.incubateesname}-${doc.doccatname}-${doc.docsubcatname}-${index}`}
+                    className={styles.tableRow}
+                  >
+                    <td className="flex items-center gap-2">
+                      {getStatusIcon(doc.status)} {doc.doccatname}
+                    </td>
+                    <td className="flex items-center gap-2">
+                      {doc.docsubcatname}
+                    </td>
+                    <td>{getStatusBadge(doc.status)}</td>
+                    <td>
+                      {doc.submission_date ? (
+                        new Date(doc.submission_date).toLocaleDateString()
+                      ) : (
+                        <em>Not uploaded</em>
+                      )}
+                    </td>
+                    <td>
+                      {doc.due_date
+                        ? new Date(
+                            doc.due_date.replace("Z", "")
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="text-right">
+                      {doc.filepath && doc.status === "Submitted" ? (
+                        <button
+                          className={styles.buttonPrimary}
+                          onClick={() => handleViewDocument(doc.filepath)}
+                        >
+                          View Doc
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.buttonPrimary}
+                          onClick={() => handleViewDocument(doc.filepath)}
+                          disabled={!doc.filepath}
+                        >
+                          {doc.filepath ? "View Doc" : "No File"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className={styles.noData}>
+                    No documents found matching your filters.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {filteredDocuments.length > 0 && (
+            <div className={styles.pagination}>
+              <div className={styles.paginationInfo}>
+                Page {currentPage} of {totalPages}
+              </div>
+
+              <div className={styles.paginationControls}>
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={styles.paginationButton}
+                >
+                  <ChevronLeft className={styles.paginationIcon} />
+                  Previous
+                </button>
+
+                <div className={styles.pageNumbers}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageClick(page)}
+                        className={`${styles.pageButton} ${
+                          currentPage === page ? styles.pageButtonActive : ""
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={styles.paginationButton}
+                >
+                  Next
+                  <ChevronRight className={styles.paginationIcon} />
+                </button>
+              </div>
+
+              <div className={styles.itemsPerPage}>
+                <label>Items per page: </label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className={styles.pageSizeSelect}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Add Document Modal */}
-        {isModalOpen && (
+        {/* Add Document Modal - Only for users */}
+        {isModalOpen && Number(roleid) === 4 && (
           <DocumentUploadModal
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}

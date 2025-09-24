@@ -1,9 +1,14 @@
 // CompanyTable.jsx
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import styles from "./CompanyTable.module.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { DataContext } from "../Components/Datafetching/DataProvider";
 
 export default function CompanyTable({ companyList = [] }) {
+  const navigate = useNavigate();
+
+  const { roleid } = useContext(DataContext);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -112,8 +117,8 @@ export default function CompanyTable({ companyList = [] }) {
           className={styles.select}
         >
           <option value="all">All Stages</option>
-          <option value="1">Pre-Seed</option>
-          <option value="2">Seed</option>
+          <option value="1">Pre Seed</option>
+          <option value="2">Seed Stage</option>
           <option value="3">Early Stage</option>
           <option value="4">Growth Stage</option>
           <option value="5">Expansion Stage</option>
@@ -177,14 +182,22 @@ export default function CompanyTable({ companyList = [] }) {
                       ).toLocaleDateString()
                     : "-"}
                 </td>
-                {/* <td className={styles.textRight}>
-                  <NavLink
-                    to={`/startup/Dashboard/${item.usersrecid}`}
-                    state={{ companyData: item }} // Pass company data as state
-                  >
-                    <button className={styles.buttonSmall}>View</button>
-                  </NavLink>
-                </td> */}
+                {Number(roleid) === 1 && (
+                  <td>
+                    <button
+                      className={styles.buttonPrimary}
+                      onClick={() =>
+                        navigate(
+                          `/startup/Dashboard/${
+                            item.usersrecid
+                          }?founder=${encodeURIComponent(item.incubateesname)}`
+                        )
+                      }
+                    >
+                      View Startup Dashboard
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

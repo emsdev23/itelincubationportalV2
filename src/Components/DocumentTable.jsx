@@ -32,7 +32,7 @@ export default function DocumentTable() {
   // Loading state for year filter
   const [yearLoading, setYearLoading] = useState(false);
 
-  // Reset to first page when filters change - MOVED BEFORE EARLY RETURN
+  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, stageFilter, statusFilter, itemsPerPage]);
@@ -52,7 +52,31 @@ export default function DocumentTable() {
     });
   };
 
-  // Filtering logic
+  // Map stage names to filter values
+  const getStageFilterValue = (stageName) => {
+    if (!stageName) return "";
+
+    const normalizedStage = stageName.toLowerCase().trim();
+    switch (normalizedStage) {
+      case "pre seed stage":
+        return "1";
+      case "seed stage":
+        return "2";
+      case "early stage":
+      case "early":
+        return "3";
+      case "growth stage":
+      case "growth":
+        return "4";
+      case "expansion stage":
+      case "expansion":
+        return "5";
+      default:
+        return "";
+    }
+  };
+
+  // Filtering logic - FIXED VERSION
   const filteredData = (companyDoc || []).filter((item) => {
     const statusNormalized = (item.status || "").toLowerCase();
 
@@ -65,10 +89,11 @@ export default function DocumentTable() {
         .includes(searchTerm.toLowerCase()) ||
       (item.doccatname || "").toLowerCase().includes(searchTerm.toLowerCase());
 
+    // FIXED: Compare stage names instead of numbers
     const matchesStage =
       stageFilter === "all" ||
       (item.incubateesstagelevel &&
-        item.incubateesstagelevel === Number(stageFilter));
+        getStageFilterValue(item.incubateesstagelevel) === stageFilter);
 
     const matchesStatus =
       statusFilter === "all" || statusNormalized === statusFilter;
@@ -83,25 +108,25 @@ export default function DocumentTable() {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredData.slice(startIndex, endIndex);
 
-  // Stage name mapping
-  const getStageName = (level) => {
-    switch (level) {
-      case 1:
-        return "Pre-Seed";
-      case 2:
-        return "Seed";
-      case 3:
+  // Get display name for current stage filter
+  const getStageDisplayName = (filterValue) => {
+    switch (filterValue) {
+      case "1":
+        return "Pre Seed Stage";
+      case "2":
+        return "Seed Stage";
+      case "3":
         return "Early Stage";
-      case 4:
+      case "4":
         return "Growth Stage";
-      case 5:
+      case "5":
         return "Expansion Stage";
       default:
-        return "";
+        return "All Stages";
     }
   };
 
-  // Fixed fetchDocumentsByYear function with proper error handling
+  // Fixed fetchDocumentsByYear function
   const fetchDocumentsByYear = async () => {
     setYearLoading(true);
     try {
@@ -111,53 +136,34 @@ export default function DocumentTable() {
         endYear: tempToYear,
       });
 
-      console.log("Full response:", response);
-
       // Handle different response structures
       let responseData;
       if (response.data && Array.isArray(response.data)) {
-        // Direct array in data
         responseData = response.data;
       } else if (
         response.data &&
         response.data.data &&
         Array.isArray(response.data.data)
       ) {
-        // Nested data structure
         responseData = response.data.data;
       } else if (
         response.data &&
         response.data.result &&
         Array.isArray(response.data.result)
       ) {
-        // Alternative structure
         responseData = response.data.result;
       } else {
-        // Fallback
         console.warn("Unexpected response structure:", response);
         responseData = [];
       }
 
       setCompanyDoc(responseData);
-      setCurrentPage(1); // Reset to first page when year changes
+      setCurrentPage(1);
       setFromYear(tempFromYear);
       setToYear(tempToYear);
-
-      console.log("Processed data:", responseData);
     } catch (err) {
       console.error("Error fetching documents by year:", err);
-
-      // More detailed error logging
-      if (err.response) {
-        console.error("Error response:", err.response);
-        console.error("Error status:", err.response.status);
-        console.error("Error data:", err.response.data);
-      }
-
-      // Set empty array on error to prevent crashes
       setCompanyDoc([]);
-
-      // You might want to show a user-friendly error message here
       alert(
         `Error fetching documents: ${err.message || "Unknown error occurred"}`
       );
@@ -267,8 +273,8 @@ export default function DocumentTable() {
           className={styles.select}
         >
           <option value="all">All Stages</option>
-          <option value="1">Pre-Seed</option>
-          <option value="2">Seed</option>
+          <option value="1">Pre Seed</option>
+          <option value="2">Seed Stage</option>
           <option value="3">Early Stage</option>
           <option value="4">Growth Stage</option>
           <option value="5">Expansion Stage</option>
@@ -283,7 +289,7 @@ export default function DocumentTable() {
           <option value="pending">Pending</option>
           <option value="submitted">Submitted</option>
           <option value="overdue">Overdue</option>
-          <option value="approved">Approved</option>
+          {/* <option value="approved">Approved</option> */}
         </select>
 
         <select
@@ -303,6 +309,12 @@ export default function DocumentTable() {
         <div className={styles.resultsInfo}>
           Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of{" "}
           {totalItems} entries
+          {stageFilter !== "all" && (
+            <span>
+              {" "}
+              (Filtered by stage: {getStageDisplayName(stageFilter)})
+            </span>
+          )}
         </div>
       )}
 
@@ -338,12 +350,8 @@ export default function DocumentTable() {
                   <td>{item.documentname}</td>
                   {Number(roleid) === 1 ? (
                     <td>
-                      <span
-                        className={`${styles.badge} ${
-                          styles[item.incubateesstagelevel]
-                        }`}
-                      >
-                        {getStageName(item.incubateesstagelevel)}
+                      <span className={`${styles.badge} ${styles.stage}`}>
+                        {item.incubateesstagelevel || "Unknown"}
                       </span>
                     </td>
                   ) : null}
@@ -375,6 +383,9 @@ export default function DocumentTable() {
         {filteredData.length === 0 && !yearLoading && (
           <div className={styles.noData}>
             No documents found matching your criteria.
+            {stageFilter !== "all" && (
+              <div>Try changing the stage filter or search term.</div>
+            )}
           </div>
         )}
 

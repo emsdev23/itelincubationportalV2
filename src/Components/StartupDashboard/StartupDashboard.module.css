@@ -161,7 +161,7 @@
 .documentsTableFull {
   width: 100vw; /* full viewport width */
   margin-left: calc(-50vw + 50%); /* center table relative to viewport */
-  margin-top: 2rem;
+  margin-top: 0rem;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.5);
   padding: 1rem 2rem;
@@ -321,4 +321,200 @@
 /* Show tooltip on hover */
 .tooltip:hover::after {
   opacity: 1;
+}
+
+/* Filter Section Styles */
+.filterSection {
+  /* background: rgba(255, 255, 255, 0.5); */
+
+  padding: 1.5rem;
+  border-radius: 8px;
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
+  /* margin-bottom: 1.5rem; */
+  width: 600px;
+  margin-top: 2rem;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  /* flex-wrap: wrap; */
+  margin-bottom: 1rem;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: white;
+  min-width: 150px;
+}
+
+.clearFiltersBtn {
+  padding: 0.5rem 1rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.clearFiltersBtn:hover {
+  background: #4b5563;
+}
+
+.resultsInfo {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.noData {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.paginationInfo {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginationButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.paginationIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pageButton {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-width: 2.5rem;
+}
+
+.pageButton:hover {
+  background: #f3f4f6;
+}
+
+.pageButtonActive {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.itemsPerPage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.pageSizeSelect {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .filterGroup {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchBox {
+    min-width: auto;
+  }
+
+  .pagination {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .pageNumbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }

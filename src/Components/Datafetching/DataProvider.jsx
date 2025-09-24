@@ -15,6 +15,10 @@ export const DataProvider = ({ children }) => {
   const [startupdetails, setstartupdetails] = useState([]);
   const [currentCompanyDetails, setCurrentCompanyDetails] = useState(null);
 
+  // Add new state for admin viewing specific startup
+  const [adminViewingStartupId, setAdminViewingStartupId] = useState(null);
+  const [adminStartupLoading, setAdminStartupLoading] = useState(false);
+
   const [userid, setUserid] = useState(
     sessionStorage.getItem("userid") || null
   );
@@ -23,8 +27,8 @@ export const DataProvider = ({ children }) => {
     sessionStorage.getItem("roleid") || null
   );
 
-  const [fromYear, setFromYear] = useState("2024");
-  const [toYear, setToYear] = useState("2025");
+  const [fromYear, setFromYear] = useState("2025");
+  const [toYear, setToYear] = useState("2026");
 
   // Helper function to safely extract data from API response
   const extractData = (response, fallback = []) => {
@@ -53,8 +57,10 @@ export const DataProvider = ({ children }) => {
   // Add this refresh function for company documents
   const refreshCompanyDocuments = async () => {
     try {
+      const targetUserId = adminViewingStartupId || userid;
       const response = await api.post("/generic/getcollecteddocsdash", {
-        userId: Number(roleid) === 1 ? "ALL" : userid,
+        userId:
+          Number(roleid) === 1 && !adminViewingStartupId ? "ALL" : targetUserId,
         startYear: fromYear,
         endYear: toYear,
       });
@@ -70,9 +76,83 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Add adminviewData state
+  const [adminviewData, setadminviewData] = useState(null);
+
+  // New function to fetch startup data by ID
+  const fetchStartupDataById = async (userId) => {
+    if (!userId) return;
+
+    setAdminStartupLoading(true);
+    setAdminViewingStartupId(userId);
+
+    try {
+      // API call for company documents
+      const documentsResponse = await api.post(
+        "/generic/getcollecteddocsdash",
+        {
+          userId: userId,
+          startYear: fromYear,
+          endYear: toYear,
+        }
+      );
+
+      // API call for startup/incubatee details
+      const incubateesResponse = await api.post("/generic/getincubatessdash", {
+        userId: userId,
+      });
+
+      // Process documents data
+      const documentsData = extractData(documentsResponse, []);
+      setstartupcompanyDoc(documentsData);
+
+      // Process incubatees data
+      const incubateesData = extractData(incubateesResponse, []);
+      setstartupdetails(incubateesData);
+
+      console.log("Fetched startup data:", {
+        documents: documentsData,
+        incubatees: incubateesData,
+      });
+    } catch (error) {
+      console.error("Error fetching startup data by ID:", error);
+      setstartupcompanyDoc([]);
+      setstartupdetails([]);
+    } finally {
+      setAdminStartupLoading(false);
+    }
+  };
+
+  // Effect to fetch data when adminviewData changes
+  useEffect(() => {
+    if (adminviewData) {
+      fetchStartupDataById(adminviewData);
+    }
+  }, [adminviewData, fromYear, toYear]);
+
+  // New function for admin to fetch specific startup data
+  const fetchStartupDataForAdmin = async (startupUserId) => {
+    if (Number(roleid) !== 1) {
+      console.warn("Only admin can view other startup data");
+      return;
+    }
+
+    fetchStartupDataById(startupUserId);
+  };
+
+  // Function to reset admin view back to admin's own data
+  const resetAdminView = () => {
+    setAdminViewingStartupId(null);
+    setstartupcompanyDoc([]);
+    setstartupdetails([]);
+  };
+
   // General data fetch (for admin/users)
   useEffect(() => {
     if (!userid) return;
+
+    // Skip general fetch if admin is viewing specific startup
+    if (adminViewingStartupId) return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -132,11 +212,17 @@ export const DataProvider = ({ children }) => {
                 break;
               case "documents":
                 setCompanyDoc(data);
-                setstartupcompanyDoc(data); // If they should be the same
+                // Only set startup data if not admin or if admin is not viewing specific startup
+                if (Number(roleid) !== 1) {
+                  setstartupcompanyDoc(data);
+                }
                 break;
               case "incubatees":
                 setListOfIncubatees(data);
-                setstartupdetails(data); // If they should be the same
+                // Only set startup data if not admin or if admin is not viewing specific startup
+                if (Number(roleid) !== 1) {
+                  setstartupdetails(data);
+                }
                 break;
               default:
                 break;
@@ -157,11 +243,15 @@ export const DataProvider = ({ children }) => {
                 break;
               case "documents":
                 setCompanyDoc([]);
-                setstartupcompanyDoc([]);
+                if (Number(roleid) !== 1) {
+                  setstartupcompanyDoc([]);
+                }
                 break;
               case "incubatees":
                 setListOfIncubatees([]);
-                setstartupdetails([]);
+                if (Number(roleid) !== 1) {
+                  setstartupdetails([]);
+                }
                 break;
               default:
                 break;
@@ -177,15 +267,17 @@ export const DataProvider = ({ children }) => {
         setByStage([]);
         setCompanyDoc([]);
         setListOfIncubatees([]);
-        setstartupcompanyDoc([]);
-        setstartupdetails([]);
+        if (Number(roleid) !== 1) {
+          setstartupcompanyDoc([]);
+          setstartupdetails([]);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [userid, roleid, fromYear, toYear]);
+  }, [userid, roleid, fromYear, toYear, adminViewingStartupId]);
 
   return (
     <DataContext.Provider
@@ -196,6 +288,7 @@ export const DataProvider = ({ children }) => {
         companyDoc,
         setCompanyDoc,
         listOfIncubatees,
+        setListOfIncubatees,
         loading,
         userid,
         setUserid,
@@ -211,7 +304,15 @@ export const DataProvider = ({ children }) => {
         setstartupdetails,
         currentCompanyDetails,
         setCurrentCompanyDetails,
-        refreshCompanyDocuments, // Add this new function
+        refreshCompanyDocuments,
+        // New admin functions
+        fetchStartupDataForAdmin,
+        fetchStartupDataById,
+        resetAdminView,
+        adminViewingStartupId,
+        adminStartupLoading,
+        adminviewData,
+        setadminviewData,
       }}
     >
       {children}
