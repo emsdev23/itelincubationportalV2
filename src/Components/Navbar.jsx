@@ -13,8 +13,15 @@ import { useContext } from "react";
 import { DataContext } from "../Components/Datafetching/DataProvider";
 
 const Navbar = () => {
-  const { stats, byField, byStage, loading, companyDoc, listOfIncubatees } =
-    useContext(DataContext);
+  const {
+    stats,
+    byField,
+    byStage,
+    loading,
+    companyDoc,
+    listOfIncubatees,
+    clearAllData,
+  } = useContext(DataContext);
   const navigate = useNavigate();
 
   console.log(stats);
@@ -52,6 +59,9 @@ const Navbar = () => {
     // localStorage.removeItem("userid");
     // localStorage.removeItem("token");
     // localStorage.removeItem("roleid");
+
+    // Clear all context data first
+    clearAllData();
 
     //session storage
     sessionStorage.removeItem("userid");

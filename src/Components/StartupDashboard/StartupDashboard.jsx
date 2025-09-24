@@ -47,6 +47,7 @@ const StartupDashboard = () => {
     refreshCompanyDocuments,
     adminStartupLoading,
     adminviewData,
+    clearAllData,
   } = useContext(DataContext);
 
   const location = useLocation();
@@ -320,13 +321,21 @@ const StartupDashboard = () => {
   };
 
   const handleLogout = () => {
+    // Clear all context data first
+    clearAllData();
+
+    // Clear session storage
     sessionStorage.removeItem("userid");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("roleid");
+
+    // Navigate to login
     navigate("/", { replace: true });
   };
 
   const handleBackToAdmin = () => {
+    // clearAllData();
+
     navigate("/Incubation/Dashboard");
   };
 
@@ -389,14 +398,7 @@ const StartupDashboard = () => {
                 Back to Portal
               </button>
             )}
-            <button
-              className={style.btnPrimary}
-              onClick={handleLogout}
-              style={{ background: "#0ca678", fontWeight: "bold" }}
-            >
-              <LogOut className={style.icon} />
-              Logout
-            </button>
+
             <div
               style={{
                 display: "flex",
@@ -410,14 +412,17 @@ const StartupDashboard = () => {
             >
               <CircleUserRound />
               <div>{founderName}</div>
-              {/* <div>
-                <div>
-                  
-                </div>
-
-               
-              </div> */}
             </div>
+            {Number(roleid) === 4 && (
+              <button
+                className={style.btnPrimary}
+                onClick={handleLogout}
+                style={{ background: "#0ca678", fontWeight: "bold" }}
+              >
+                <LogOut className={style.icon} />
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -648,7 +653,7 @@ const StartupDashboard = () => {
                 <th>Document SubCategory</th>
                 <th>Document Name</th>
                 <th>Status</th>
-                <th>periodicity</th>
+                <th>Periodicity</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
 

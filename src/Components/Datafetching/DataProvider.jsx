@@ -143,9 +143,39 @@ export const DataProvider = ({ children }) => {
   // Function to reset admin view back to admin's own data
   const resetAdminView = () => {
     setAdminViewingStartupId(null);
+    setadminviewData(null);
     setstartupcompanyDoc([]);
     setstartupdetails([]);
   };
+
+  // Function to clear all data (for logout)
+  const clearAllData = () => {
+    setStats(null);
+    setByField([]);
+    setByStage([]);
+    setCompanyDoc([]);
+    setListOfIncubatees([]);
+    setstartupcompanyDoc([]);
+    setstartupdetails([]);
+    setCurrentCompanyDetails(null);
+    setAdminViewingStartupId(null);
+    setadminviewData(null);
+    setLoading(false);
+  };
+
+  // Effect to clear admin data when userid or roleid changes (login/logout)
+  useEffect(() => {
+    if (!userid || !roleid) {
+      // Clear all data if no userid or roleid (logout scenario)
+      clearAllData();
+      return;
+    }
+
+    // If switching from admin view to user login, clear admin-specific data
+    if (Number(roleid) === 4 && (adminViewingStartupId || adminviewData)) {
+      resetAdminView();
+    }
+  }, [userid, roleid]);
 
   // General data fetch (for admin/users)
   useEffect(() => {
@@ -309,6 +339,7 @@ export const DataProvider = ({ children }) => {
         fetchStartupDataForAdmin,
         fetchStartupDataById,
         resetAdminView,
+        clearAllData,
         adminViewingStartupId,
         adminStartupLoading,
         adminviewData,

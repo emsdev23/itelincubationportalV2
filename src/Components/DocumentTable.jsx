@@ -92,8 +92,8 @@ export default function DocumentTable() {
     // FIXED: Compare stage names instead of numbers
     const matchesStage =
       stageFilter === "all" ||
-      (item.incubateesstagelevel &&
-        getStageFilterValue(item.incubateesstagelevel) === stageFilter);
+      (item.startupstagesname &&
+        getStageFilterValue(item.startupstagesname) === stageFilter);
 
     const matchesStatus =
       statusFilter === "all" || statusNormalized === statusFilter;
@@ -351,7 +351,7 @@ export default function DocumentTable() {
                   {Number(roleid) === 1 ? (
                     <td>
                       <span className={`${styles.badge} ${styles.stage}`}>
-                        {item.incubateesstagelevel || "Unknown"}
+                        {item.startupstagesname || "Unknown"}
                       </span>
                     </td>
                   ) : null}
