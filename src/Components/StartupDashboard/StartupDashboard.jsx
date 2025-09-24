@@ -3,6 +3,7 @@ import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
 import { useNavigate } from "react-router-dom";
+
 import {
   Link,
   NavLink,
@@ -378,10 +379,10 @@ const StartupDashboard = () => {
                 className={style.btnPrimary}
                 onClick={handleBackToAdmin}
                 style={{
-                  background: "#ff922b",
+                  background: "#63e6be",
                   display: "flex",
                   fontWeight: "bold",
-                  color: "#d9480f",
+                  color: "#0b7285",
                 }}
               >
                 <ArrowLeft className={style.icon} />
@@ -645,9 +646,12 @@ const StartupDashboard = () => {
               <tr className="bg-gray-200">
                 <th>Document Category</th>
                 <th>Document SubCategory</th>
+                <th>Document Name</th>
                 <th>Status</th>
+                <th>periodicity</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
+
                 <th>{}</th>
               </tr>
             </thead>
@@ -664,7 +668,11 @@ const StartupDashboard = () => {
                     <td className="flex items-center gap-2">
                       {doc.docsubcatname}
                     </td>
+                    <td className="flex items-center gap-2">
+                      {doc.documentname}
+                    </td>
                     <td>{getStatusBadge(doc.status)}</td>
+                    <td>{doc.periodicity}</td>
                     <td>
                       {doc.submission_date ? (
                         new Date(doc.submission_date).toLocaleDateString()

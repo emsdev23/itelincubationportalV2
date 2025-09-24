@@ -186,6 +186,14 @@ export default function CompanyTable({ companyList = [] }) {
                   <td>
                     <button
                       className={styles.buttonPrimary}
+                      style={{
+                        background: "#4f46e5",
+                        color: "#fff",
+                        borderRadius: "0.3rem",
+                        padding: "0.4rem",
+                        borderColor: "#4f46e5",
+                        cursor: "pointer",
+                      }}
                       onClick={() =>
                         navigate(
                           `/startup/Dashboard/${
@@ -194,7 +202,7 @@ export default function CompanyTable({ companyList = [] }) {
                         )
                       }
                     >
-                      View Startup Dashboard
+                      View Details
                     </button>
                   </td>
                 )}
