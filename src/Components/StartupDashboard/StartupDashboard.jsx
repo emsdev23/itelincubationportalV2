@@ -372,7 +372,7 @@ const StartupDashboard = () => {
     try {
       // Show confirmation dialog
       const confirmed = window.confirm(
-        "Are you sure you want to mark this document as obsolete? This action cannot be undone."
+        "Are you sure you want to mark this document as Obselete? This action cannot be undone."
       );
 
       if (!confirmed) return;
@@ -789,7 +789,7 @@ const StartupDashboard = () => {
                             onClick={() => handleAbolishDocument(doc.filepath)}
                             title="Mark document as obsolete"
                           >
-                            Abolish
+                            Obselete
                           </button>
                         )}
                       </div>

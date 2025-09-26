@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Navbar.module.css";
-import { Plus, X, LogOut, CircleUserRound } from "lucide-react";
+import { Plus, X, LogOut, CircleUserRound, FolderDown } from "lucide-react";
 import ITELLogo from "../assets/ITEL_Logo.png";
 import MetricCardDashboard from "./MetricCardDashboard";
 import CompanyFieldChart from "./CompanyFieldChart";
 import FundingStageChart from "./FundingStageChart";
 import DocumentTable from "./DocumentTable";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import CompanyTable from "./CompanyTable";
 
 import { useContext } from "react";
@@ -125,12 +125,22 @@ const Navbar = () => {
 
           {/* Right - Actions */}
           <div className={styles.actions}>
+            <NavLink
+              to="/Incubation/Dashboard/AddDocuments"
+              style={{ textDecoration: "none" }}
+            >
+              <button className={styles.btnPrimary}>
+                <FolderDown className={styles.icon} />
+                Document Management
+              </button>
+            </NavLink>
+
             <button
               className={styles.btnPrimary}
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className={styles.icon} />
-              Add Startup
+              Add Incubatee
             </button>
 
             <button

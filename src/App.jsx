@@ -8,6 +8,8 @@ import LoginForm from "./Components/Login/LoginForm";
 import ProtectedRoute from "./Components/ProtectedRoute";
 
 import { DataProvider } from "./Components/Datafetching/DataProvider";
+
+import DocumentManagementPage from "./Components/DocumentUpload/DocumentManagementPage";
 function App() {
   return (
     <>
@@ -29,6 +31,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <StartupDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/Incubation/Dashboard/AddDocuments"
+                element={
+                  <ProtectedRoute>
+                    <DocumentManagementPage />
                   </ProtectedRoute>
                 }
               />
