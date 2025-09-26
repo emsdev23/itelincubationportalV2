@@ -3,6 +3,7 @@ import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
 import { useNavigate } from "react-router-dom";
+// import ChangePasswordModal from "./ChangePasswordModal";
 
 import {
   Link,
@@ -35,6 +36,7 @@ import ITELLogo from "../../assets/ITEL_Logo.png";
 
 import { DataContext } from "../Datafetching/DataProvider";
 import DocumentTable from "../DocumentTable";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const StartupDashboard = () => {
   const {
@@ -49,6 +51,8 @@ const StartupDashboard = () => {
     adminviewData,
     clearAllData,
   } = useContext(DataContext);
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -364,6 +368,64 @@ const StartupDashboard = () => {
     setCurrentPage(1);
   };
 
+  const handleAbolishDocument = async (filepath) => {
+    try {
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        "Are you sure you want to mark this document as obsolete? This action cannot be undone."
+      );
+
+      if (!confirmed) return;
+
+      // Get the user ID and token from sessionStorage (same as other functions)
+      const userId = sessionStorage.getItem("userid");
+      const token = sessionStorage.getItem("token");
+
+      if (!userId || !token) {
+        alert("User authentication not found. Please login again.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://121.242.232.212:8086/itelinc/resources/generic/markobsolete?modifiedBy=${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            url: filepath,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Document marked as obsolete:", result);
+
+        // Show success message
+        alert("Document has been successfully marked as obsolete.");
+
+        // Refresh the documents list
+        if (refreshCompanyDocuments) {
+          await refreshCompanyDocuments();
+        } else {
+          await fetchCompanyDocuments();
+        }
+      } else {
+        console.error(
+          "Failed to mark document as obsolete:",
+          response.statusText
+        );
+        alert("Failed to mark document as obsolete. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error marking document as obsolete:", error);
+      alert("An error occurred while marking the document as obsolete.");
+    }
+  };
+
   return (
     <div>
       {/* Navigation bar */}
@@ -398,7 +460,6 @@ const StartupDashboard = () => {
                 Back to Portal
               </button>
             )}
-
             <div
               style={{
                 display: "flex",
@@ -408,11 +469,21 @@ const StartupDashboard = () => {
                 // gap: "0.5rem",
                 fontSize: "0.8rem",
                 color: "gray",
+                cursor: "pointer",
               }}
+              onClick={() => setIsChangePasswordOpen(true)}
             >
               <CircleUserRound />
               <div>{founderName}</div>
             </div>
+
+            {isChangePasswordOpen && Number(roleid) === 4 && (
+              <ChangePasswordModal
+                isOpen={isChangePasswordOpen}
+                onClose={() => setIsChangePasswordOpen(false)}
+              />
+            )}
+
             {Number(roleid) === 4 && (
               <button
                 className={style.btnPrimary}
@@ -426,14 +497,6 @@ const StartupDashboard = () => {
           </div>
         </div>
       </header>
-
-      {/* Admin indicator */}
-      {/* {Number(roleid) === 1 && adminviewData && (
-        <div className="mb-4 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 mx-6">
-          <p className="font-medium">Admin View Mode</p>
-          <p className="text-sm">Viewing startup data for: {incubateesname}</p>
-        </div>
-      )} */}
 
       {/* Startup dashboard */}
       <div className={styles.container}>
@@ -656,7 +719,6 @@ const StartupDashboard = () => {
                 <th>Periodicity</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
-
                 <th>{}</th>
               </tr>
             </thead>
@@ -693,28 +755,50 @@ const StartupDashboard = () => {
                         : "N/A"}
                     </td>
                     <td className="text-right">
-                      {doc.filepath && doc.status === "Submitted" ? (
-                        <button
-                          className={styles.buttonPrimary}
-                          onClick={() => handleViewDocument(doc.filepath)}
-                        >
-                          View Doc
-                        </button>
-                      ) : (
-                        <button
-                          className={styles.buttonPrimary}
-                          onClick={() => handleViewDocument(doc.filepath)}
-                          disabled={!doc.filepath}
-                        >
-                          {doc.filepath ? "View Doc" : "No File"}
-                        </button>
-                      )}
+                      <div className="flex gap-2 justify-end">
+                        {doc.filepath && doc.status === "Submitted" ? (
+                          <button
+                            className={styles.buttonPrimary}
+                            onClick={() => handleViewDocument(doc.filepath)}
+                          >
+                            View Doc
+                          </button>
+                        ) : (
+                          <button
+                            className={styles.buttonPrimary}
+                            onClick={() => handleViewDocument(doc.filepath)}
+                            disabled={!doc.filepath}
+                          >
+                            {doc.filepath ? "View Doc" : "No File"}
+                          </button>
+                        )}
+
+                        {/* Abolish Button - Only show if document has filepath */}
+                        {doc.filepath && (
+                          <button
+                            style={{
+                              background: "#ff8787",
+                              padding: "0.2rem",
+                              border: "1px solid #ff8787",
+                              borderRadius: "0.3rem",
+                              color: "#c92a2a",
+                              fontSize: "0.7rem",
+                              cursor: "pointer",
+                              // width: "2rem",
+                            }}
+                            onClick={() => handleAbolishDocument(doc.filepath)}
+                            title="Mark document as obsolete"
+                          >
+                            Abolish
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className={styles.noData}>
+                  <td colSpan="8" className={styles.noData}>
                     No documents found matching your filters.
                   </td>
                 </tr>

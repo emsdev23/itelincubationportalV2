@@ -1,14 +1,6 @@
-import React, { useContext } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import React from "react";
+import ReactApexChart from "react-apexcharts";
 import styles from "./CompanyFieldChart.module.css";
-import { DataContext } from "../Components/Datafetching/DataProvider";
 
 const COLORS = [
   "#3b82f6",
@@ -23,20 +15,45 @@ const COLORS = [
   "#84cc16",
   "#f87171",
   "#10b981",
-  "#6366f1", // extra colors for 13 items
+  "#6366f1",
 ];
 
 const CompanyFieldChart = ({ byField }) => {
   if (!byField || byField.length === 0) return <p>No data available</p>;
 
-  // transform API response into recharts format
   const total = byField.reduce((sum, item) => sum + item.incubatees_count, 0);
 
-  const data = byField.map((item) => ({
-    name: item.fieldofworkname,
-    value: parseFloat(((item.incubatees_count / total) * 100).toFixed(1)),
-    count: item.incubatees_count,
-  }));
+  const labels = byField.map((item) => item.fieldofworkname);
+  const series = byField.map((item) =>
+    parseFloat(((item.incubatees_count / total) * 100).toFixed(1))
+  );
+
+  const options = {
+    chart: {
+      type: "pie",
+      toolbar: {
+        show: true,
+        tools: {
+          download: true, // 🔽 enables PNG, SVG, CSV
+        },
+      },
+    },
+    labels,
+    colors: COLORS,
+    legend: {
+      position: "bottom",
+    },
+    tooltip: {
+      y: {
+        formatter: (val, { seriesIndex }) =>
+          `${byField[seriesIndex].incubatees_count} companies (${val}%)`,
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => `${val.toFixed(1)}%`,
+    },
+  };
 
   return (
     <div className={styles.card}>
@@ -44,35 +61,12 @@ const CompanyFieldChart = ({ byField }) => {
         <h3 className={styles.title}>Companies by Field</h3>
       </div>
       <div className={styles.content}>
-        <div className={styles.chartWrapper}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ value }) => `${value}%`}
-                outerRadius={80}
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value, name, props) => [
-                  `${props.payload.count} companies (${value}%)`,
-                  name,
-                ]}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <ReactApexChart
+          options={options}
+          series={series}
+          type="pie"
+          height={350}
+        />
       </div>
     </div>
   );

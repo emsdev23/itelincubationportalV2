@@ -55,19 +55,51 @@ const Navbar = () => {
     setFormData({ name: "", founder: "", incorporationDate: "", website: "" });
   };
 
-  const handleLogout = () => {
-    // localStorage.removeItem("userid");
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("roleid");
+  const handleLogout = async () => {
+    try {
+      const userid = JSON.parse(sessionStorage.getItem("userid"));
+      const token = sessionStorage.getItem("token");
 
-    // Clear all context data first
-    clearAllData();
+      if (!userid || !token) {
+        console.warn("User not logged in or token missing");
+        return;
+      }
 
-    //session storage
-    sessionStorage.removeItem("userid");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("roleid");
-    navigate("/", { replace: true });
+      // Call logout API
+      const response = await fetch(
+        "http://121.242.232.212:8086/itelinc/resources/auth/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // if API requires Bearer token
+          },
+          body: JSON.stringify({
+            userid,
+            logoutreason: "From Postman",
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Logout response:", data);
+
+      if (response.ok) {
+        // Clear all context and session storage
+        clearAllData();
+        sessionStorage.removeItem("userid");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("roleid");
+
+        // Navigate to login
+        navigate("/", { replace: true });
+      } else {
+        alert(`Logout failed: ${data.message || response.status}`);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Something went wrong while logging out");
+    }
   };
 
   //get data form session storage

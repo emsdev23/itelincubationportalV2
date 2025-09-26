@@ -1,58 +1,68 @@
 import React from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import ReactApexChart from "react-apexcharts";
 import styles from "./FundingStageChart.module.css";
 
 const FundingStageChart = ({ byStage }) => {
   if (!byStage || byStage.length === 0) return <p>No data available</p>;
 
-  // transform API response to chart-friendly format
-  const fundingData = byStage.map((item) => ({
-    stage: item.startupstagesname,
-    companies: item.incubatees_count,
-  }));
+  // ✅ prepare data
+  const categories = byStage.map((item) => item.startupstagesname);
+  const data = byStage.map((item) => item.incubatees_count);
+
+  const options = {
+    chart: {
+      type: "bar",
+      toolbar: { show: true }, // ✅ CSV/PNG/SVG export
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        columnWidth: "50%",
+      },
+    },
+    colors: ["#3b82f6"],
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories,
+      labels: { style: { fontSize: "12px", colors: "#6b7280" } },
+    },
+    yaxis: {
+      labels: { style: { fontSize: "12px", colors: "#6b7280" } },
+    },
+    tooltip: {
+      y: { formatter: (val) => `${val} companies` },
+    },
+    grid: {
+      borderColor: "#e5e7eb",
+      strokeDashArray: 3,
+    },
+    legend: { show: false },
+  };
+
+  const series = [{ name: "Companies", data }];
 
   return (
     <div className={styles.card}>
       <div className={styles.header}>
         <h3 className={styles.title}>Companies by Stage</h3>
       </div>
-
       <div className={styles.content}>
         <div className={styles.statsGrid}>
-          {fundingData.map((stage) => (
-            <div key={stage.stage} className={styles.statItem}>
-              <div className={styles.statValue}>{stage.companies}</div>
-              <div className={styles.statLabel}>{stage.stage}</div>
+          {byStage.map((stage) => (
+            <div key={stage.startupstagesname} className={styles.statItem}>
+              <div className={styles.statValue}>{stage.incubatees_count}</div>
+              <div className={styles.statLabel}>{stage.startupstagesname}</div>
             </div>
           ))}
         </div>
-
         <div className={styles.chartWrapper}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={fundingData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="stage" stroke="#6b7280" fontSize={12} />
-              <YAxis stroke="#6b7280" fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-                formatter={(value, name) => [`${value} companies`, "Companies"]}
-              />
-              <Bar dataKey="companies" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <ReactApexChart
+            options={options}
+            series={series}
+            type="bar"
+            height="100%" // ✅ respects .chartWrapper { height:200px }
+            width="100%"
+          />
         </div>
       </div>
     </div>
