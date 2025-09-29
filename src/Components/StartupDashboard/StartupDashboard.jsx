@@ -293,7 +293,6 @@ const StartupDashboard = () => {
         return <FileText className={styles.iconDefault} />;
     }
   };
-
   const handleViewDocument = async (filepath) => {
     try {
       const token = sessionStorage.getItem("token");
@@ -321,9 +320,36 @@ const StartupDashboard = () => {
       const data = await response.json();
 
       if (data.statusCode === 200 && data.data) {
-        // Open preview modal instead of new tab
-        setPreviewUrl(data.data);
-        setIsPreviewOpen(true);
+        const fileUrl = data.data;
+        const fileExtension = filepath.split(".").pop().toLowerCase();
+
+        // Previewable formats
+        const previewable = ["pdf", "png", "jpeg", "jpg"];
+
+        if (previewable.includes(fileExtension)) {
+          // Open preview modal
+          setPreviewUrl(fileUrl);
+          setIsPreviewOpen(true);
+        } else {
+          // Non-previewable formats: show SweetAlert to download
+          Swal.fire({
+            icon: "info",
+            title: "No Preview Available",
+            text: "This document cannot be previewed. Click download to get the file.",
+            showCancelButton: true,
+            confirmButtonText: "Download",
+            cancelButtonText: "Cancel",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const link = document.createElement("a");
+              link.href = fileUrl;
+              link.download = filepath.split("/").pop(); // use original filename
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          });
+        }
       } else {
         throw new Error(data.message || "Failed to fetch document");
       }

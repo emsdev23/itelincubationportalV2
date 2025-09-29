@@ -34,28 +34,6 @@ export default function DocumentsTable() {
       .then((res) => res.json())
       .then((data) => {
         setDocuments(data.data || []);
-        // Extract unique categories
-        setCats([
-          ...new Map(
-            (data.data || []).map((d) => [
-              d.documentcatrecid,
-              { doccatrecid: d.documentcatrecid, doccatname: d.doccatname },
-            ])
-          ).values(),
-        ]);
-        // Extract unique subcategories
-        setSubcats([
-          ...new Map(
-            (data.data || []).map((d) => [
-              d.documentsubcatrecid,
-              {
-                documentsubcatrecid: d.documentsubcatrecid,
-                docsubcatname: d.docsubcatname,
-                docsubcatscatrecid: d.documentcatrecid,
-              },
-            ])
-          ).values(),
-        ]);
         setLoading(false);
       })
       .catch((err) => {
@@ -65,8 +43,69 @@ export default function DocumentsTable() {
       });
   };
 
-  useEffect(() => {
+  // ✅ Fetch categories independently
+  const fetchCategories = () => {
+    fetch("http://121.242.232.212:8086/itelinc/getDoccatAll", {
+      method: "GET",
+      mode: "cors",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Categories data:", data); // Log for debugging
+        setCats(data.data || []);
+      })
+      .catch((err) => {
+        console.error("Error fetching categories:", err);
+      });
+  };
+
+  // ✅ Fetch subcategories independently
+  const fetchSubCategories = () => {
+    fetch("http://121.242.232.212:8086/itelinc/getDocsubcatAll", {
+      method: "GET",
+      mode: "cors",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Subcategories data:", data); // Log for debugging
+        setSubcats(data.data || []);
+      })
+      .catch((err) => {
+        console.error("Error fetching subcategories:", err);
+      });
+  };
+
+  // ✅ Refresh all data
+  const refreshData = () => {
     fetchDocuments();
+    fetchCategories();
+    fetchSubCategories();
+  };
+
+  // ✅ Refresh just dropdown data
+  const refreshDropdownData = () => {
+    fetchCategories();
+    fetchSubCategories();
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
+
+  // ✅ NEW: Add event listener to refresh dropdown data when category/subcategory changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'categoryUpdated' || e.key === 'subcategoryUpdated') {
+        refreshDropdownData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const openAddModal = () => {
@@ -78,6 +117,8 @@ export default function DocumentsTable() {
       documentsubcatrecid: "",
       documentperiodicityrecid: "",
     });
+    // ✅ Refresh dropdown data before opening the modal
+    refreshDropdownData();
     setIsModalOpen(true);
     setError(null);
   };
@@ -91,12 +132,28 @@ export default function DocumentsTable() {
       documentsubcatrecid: doc.documentsubcatrecid || "",
       documentperiodicityrecid: doc.documentperiodicityrecid || "",
     });
+    // ✅ Refresh dropdown data before opening the modal
+    refreshDropdownData();
     setIsModalOpen(true);
     setError(null);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Field changed: ${name} = ${value}`); // Log for debugging
+    
+    // ✅ Additional debugging for subcategory
+    if (name === "documentsubcatrecid") {
+      console.log("Subcategory value type:", typeof value);
+      console.log("Is subcategory value numeric?", !isNaN(value));
+      
+      // Find the selected subcategory to verify we're using the ID
+      const selectedSubcat = subcats.find(sc => 
+        sc.documentsubcatrecid === value || sc.docsubcatname === value
+      );
+      console.log("Selected subcategory object:", selectedSubcat);
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "documentcatrecid") {
@@ -135,7 +192,7 @@ export default function DocumentsTable() {
                 "Document deleted successfully!",
                 "success"
               );
-              fetchDocuments();
+              refreshData();
             } else {
               throw new Error(data.message || "Failed to delete document");
             }
@@ -167,18 +224,37 @@ export default function DocumentsTable() {
       return;
     }
 
+    // ✅ Find the selected subcategory to ensure we have the right ID
+    let subcatId = formData.documentsubcatrecid;
+    
+    // If the value is not a number, try to find the subcategory by name
+    if (isNaN(formData.documentsubcatrecid)) {
+      console.log("Subcategory value is not numeric, trying to find by name");
+      const subcatByName = subcats.find(sc => sc.docsubcatname === formData.documentsubcatrecid);
+      if (subcatByName) {
+        subcatId = subcatByName.documentsubcatrecid;
+        console.log("Found subcategory by name, using ID:", subcatId);
+      } else {
+        console.error("Could not find subcategory by name:", formData.documentsubcatrecid);
+        setError("Invalid subcategory selected");
+        setIsSubmitting(false);
+        return;
+      }
+    } else {
+      console.log("Subcategory value is numeric, using as ID:", subcatId);
+    }
+
     const params = new URLSearchParams();
     if (editDoc) {
       params.append("documentsrecid", editDoc.documentsrecid);
     }
+    
+    // ✅ Use the verified IDs
     params.append("documentname", formData.documentname.trim());
     params.append("documentdescription", formData.documentdescription.trim());
-    params.append("documentcatrecid", formData.documentcatrecid);
-    params.append("documentsubcatrecid", formData.documentsubcatrecid);
-    params.append(
-      "documentperiodicityrecid",
-      formData.documentperiodicityrecid
-    );
+    params.append("documentcatrecid", formData.documentcatrecid); // This is the ID
+    params.append("documentsubcatrecid", subcatId); // Use the verified ID
+    params.append("documentperiodicityrecid", formData.documentperiodicityrecid);
 
     if (editDoc) {
       params.append("documentmodifiedby", userId || "32");
@@ -192,6 +268,11 @@ export default function DocumentsTable() {
       : "http://121.242.232.212:8086/itelinc/addDocumentDetails";
 
     const url = `${baseUrl}?${params.toString()}`;
+    
+    // ✅ Log the URL for debugging
+    console.log("Request URL:", url);
+    console.log("Category ID being sent:", formData.documentcatrecid);
+    console.log("Subcategory ID being sent:", subcatId);
 
     fetch(url, {
       method: "POST",
@@ -203,6 +284,8 @@ export default function DocumentsTable() {
     })
       .then((res) => res.json())
       .then((data) => {
+        console.log("API Response:", data); // Log the response for debugging
+        
         if (data.statusCode === 200) {
           if (
             data.data &&
@@ -215,7 +298,7 @@ export default function DocumentsTable() {
           } else {
             setIsModalOpen(false);
             setEditDoc(null);
-            fetchDocuments();
+            refreshData();
             Swal.fire(
               "Success",
               data.message || "Document saved successfully!",
@@ -232,6 +315,16 @@ export default function DocumentsTable() {
         Swal.fire("Error", `Failed to save: ${err.message}`, "error");
       })
       .finally(() => setIsSubmitting(false));
+  };
+
+  // ✅ NEW: Add a function to get filtered subcategories for debugging
+  const getFilteredSubcategories = () => {
+    const filtered = subcats.filter(
+      (sc) => sc.docsubcatscatrecid == formData.documentcatrecid
+    );
+    console.log("Filtered subcategories:", filtered);
+    console.log("Selected category ID:", formData.documentcatrecid);
+    return filtered;
   };
 
   return (
@@ -363,18 +456,14 @@ export default function DocumentsTable() {
                   disabled={!formData.documentcatrecid}
                 >
                   <option value="">Select Subcategory</option>
-                  {subcats
-                    .filter(
-                      (sc) => sc.docsubcatscatrecid == formData.documentcatrecid
-                    )
-                    .map((sc) => (
-                      <option
-                        key={sc.documentsubcatrecid}
-                        value={sc.documentsubcatrecid}
-                      >
-                        {sc.docsubcatname}
-                      </option>
-                    ))}
+                  {getFilteredSubcategories().map((sc) => (
+                    <option
+                      key={sc.docsubcatrecid}
+                      value={sc.docsubcatrecid}
+                    >
+                      {sc.docsubcatname}
+                    </option>
+                  ))}
                 </select>
               </label>
 

@@ -52,9 +52,14 @@ export default function DocSubCatTable() {
       .catch((err) => console.error("Error fetching categories:", err));
   };
 
-  useEffect(() => {
+  // Refresh both subcategories and categories
+  const refreshData = () => {
     fetchSubCategories();
     fetchCategories();
+  };
+
+  useEffect(() => {
+    refreshData(); // Use refreshData instead of separate calls
   }, []);
 
   const openAddModal = () => {
@@ -64,6 +69,8 @@ export default function DocSubCatTable() {
       docsubcatdescription: "",
       docsubcatscatrecid: "",
     });
+    // Refresh categories before opening the modal to get the latest list
+    fetchCategories();
     setIsModalOpen(true);
     setError(null);
   };
@@ -75,6 +82,8 @@ export default function DocSubCatTable() {
       docsubcatdescription: subcat.docsubcatdescription || "",
       docsubcatscatrecid: subcat.docsubcatscatrecid || "",
     });
+    // Refresh categories before opening the modal to get the latest list
+    fetchCategories();
     setIsModalOpen(true);
     setError(null);
   };
@@ -114,7 +123,7 @@ export default function DocSubCatTable() {
                 "Subcategory deleted successfully!",
                 "success"
               );
-              fetchSubCategories();
+              refreshData(); // Use refreshData instead of just fetchSubCategories
             } else {
               throw new Error(data.message || "Failed to delete subcategory");
             }
@@ -210,7 +219,7 @@ export default function DocSubCatTable() {
               docsubcatdescription: "",
               docsubcatscatrecid: "",
             });
-            fetchSubCategories();
+            refreshData(); // Use refreshData instead of just fetchSubCategories
             Swal.fire(
               "Success",
               data.message || "Subcategory saved successfully!",
