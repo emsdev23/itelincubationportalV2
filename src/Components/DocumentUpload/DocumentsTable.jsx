@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
+import { FaTrash,FaEdit } from "react-icons/fa";
 
 export default function DocumentsTable() {
   const userId = sessionStorage.getItem("userid");
@@ -374,9 +375,15 @@ export default function DocumentsTable() {
                         : "Admin"}
                     </td>
                     <td>
-                      {doc.documentcreatedtime
-                        ? new Date(doc.documentcreatedtime).toLocaleString()
-                        : ""}
+                      {new Date(doc.documentcreatedtime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false
+                        }).replace(",", "")}
                     </td>
                     <td>
                       {isNaN(doc.documentmodifiedby)
@@ -384,22 +391,26 @@ export default function DocumentsTable() {
                         : "Admin"}
                     </td>
                     <td>
-                      {doc.documentmodifiedtime
-                        ? new Date(doc.documentmodifiedtime).toLocaleString()
-                        : ""}
+                      {new Date(doc.documentmodifiedtime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false
+                        }).replace(",", "")}
                     </td>
                     <td>
                       <button
                         className="btn-edit"
-                        onClick={() => openEditModal(doc)}
-                      >
-                        Edit
+                        onClick={() => openEditModal(doc)}>
+                        <FaEdit color="white" size={18} />
                       </button>
                       <button
                         className="btn-delete"
-                        onClick={() => handleDelete(doc.documentsrecid)}
-                      >
-                        Delete
+                        onClick={() => handleDelete(doc.documentsrecid)}>
+                        <FaTrash color="white" size={18} />
                       </button>
                     </td>
                   </tr>

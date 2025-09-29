@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
+import { FaTrash,FaEdit } from "react-icons/fa";
 
 export default function DocCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -233,25 +234,27 @@ export default function DocCatTable() {
                         ? cat.doccatcreatedby
                         : "Admin"}
                     </td>
-                    <td>{cat.doccatcreatedtime || ""}</td>
+                    <td>{cat.doccatcreatedtime.replace("?","") }
+
+                    </td>
                     <td>
                       {isNaN(cat.doccatmodifiedby)
                         ? cat.doccatmodifiedby
                         : "Admin"}
                     </td>
-                    <td>{cat.doccatmodifiedtime || ""}</td>
+                    <td>{cat.doccatmodifiedtime.replace("?","")}</td>
                     <td>
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(cat)}
                       >
-                        Edit
+                        < FaEdit size={18}/>
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(cat.doccatrecid)}
                       >
-                        Delete
+                        <FaTrash size={18} />
                       </button>
                     </td>
                   </tr>

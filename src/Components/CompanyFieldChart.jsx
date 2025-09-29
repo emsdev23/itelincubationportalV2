@@ -28,13 +28,25 @@ const CompanyFieldChart = ({ byField }) => {
     parseFloat(((item.incubatees_count / total) * 100).toFixed(1))
   );
 
+  // ✅ create filename with date
+  const today = new Date();
+  const dateStr = today.toISOString().split("T")[0]; // e.g. 2025-09-29
+
   const options = {
     chart: {
       type: "pie",
       toolbar: {
         show: true,
-        tools: {
-          download: true, // 🔽 enables PNG, SVG, CSV
+        export: {
+          csv: {
+            filename: `FieldBased_${dateStr}`,
+          },
+          svg: {
+            filename: `FieldBased_${dateStr}`,
+          },
+          png: {
+            filename: `FieldBased_${dateStr}`,
+          },
         },
       },
     },

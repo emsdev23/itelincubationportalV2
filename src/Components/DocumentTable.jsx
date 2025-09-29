@@ -4,8 +4,12 @@ import styles from "./DocumentTable.module.css";
 import { NavLink } from "react-router-dom";
 import { DataContext } from "../Components/Datafetching/DataProvider";
 import api from "./Datafetching/api";
+import Swal from "sweetalert2";
+import style from "../Components/StartupDashboard/StartupDashboard.module.css";
 
 export default function DocumentTable() {
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const {
     companyDoc,
     loading,
@@ -227,6 +231,76 @@ export default function DocumentTable() {
     return pages;
   };
 
+  const handleViewDocument = async (filepath) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const userid = sessionStorage.getItem("userid");
+
+      const response = await fetch(
+        "http://121.242.232.212:8086/itelinc/resources/generic/getfileurl",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userid: userid,
+            url: filepath,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.statusCode === 200 && data.data) {
+        const fileUrl = data.data;
+        const fileExtension = filepath.split(".").pop().toLowerCase();
+
+        // Previewable formats
+        const previewable = ["pdf", "png", "jpeg", "jpg"];
+
+        if (previewable.includes(fileExtension)) {
+          // Open preview modal
+          setPreviewUrl(fileUrl);
+          setIsPreviewOpen(true);
+        } else {
+          // Non-previewable formats: show SweetAlert to download
+          Swal.fire({
+            icon: "info",
+            title: "No Preview Available",
+            text: "This document cannot be previewed. Click download to get the file.",
+            showCancelButton: true,
+            confirmButtonText: "Download",
+            cancelButtonText: "Cancel",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const link = document.createElement("a");
+              link.href = fileUrl;
+              link.download = filepath.split("/").pop(); // use original filename
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          });
+        }
+      } else {
+        throw new Error(data.message || "Failed to fetch document");
+      }
+    } catch (error) {
+      console.error("Error fetching file:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Unable to load document: " + error.message,
+      });
+    }
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -321,7 +395,7 @@ export default function DocumentTable() {
       {/* Table */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
+          <thead style={{ fontSize: "15px", fontWeight: "600" }}>
             <tr>
               <th>Company</th>
               <th>Document Category</th>
@@ -331,6 +405,8 @@ export default function DocumentTable() {
               <th>Submission Date</th>
               <th>Due Date</th>
               <th>Status</th>
+              <th>Doc State</th>
+              <th>{}</th>
             </tr>
           </thead>
           <tbody>
@@ -374,12 +450,83 @@ export default function DocumentTable() {
                       {item.status}
                     </span>
                   </td>
+                  <td>
+                    {item.collecteddocobsoletestate ? (
+                      <p
+                        style={{
+                          background: "#ff8787",
+                          color: "#c92a2a",
+                          borderRadius: "4px",
+                          padding: "2px 6px",
+                          display: "inline-block",
+                          fontWeight: "600",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {item.collecteddocobsoletestate}
+                      </p>
+                    ) : (
+                      "---"
+                    )}
+                  </td>
+
+                  {/* <td className="text-right">
+                    <div
+                      className="flex gap-2 justify-end"
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      {companyDoc.filepath &&
+                      companyDoc.status === "Submitted" ? (
+                        <button
+                          className={styles.buttonPrimary}
+                          onClick={() =>
+                            handleViewDocument(companyDoc.filepath)
+                          }
+                        >
+                          View Doc
+                        </button>
+                      ) : (
+                        <button
+                          className={style.buttonPrimary}
+                          onClick={() => handleViewDocument(item.filepath)}
+                          disabled={!item.filepath}
+                        >
+                          {item.filepath ? "View Doc" : "No File"}
+                        </button>
+                      )}
+                    </div>
+                  </td> */}
                 </tr>
               );
             })}
           </tbody>
         </table>
-
+        {/* 
+        <div>
+          {isPreviewOpen && (
+            <div className={styles.previewModal}>
+              <div className={styles.previewContent}>
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setIsPreviewOpen(false)}
+                >
+                  ✖
+                </button>
+                <iframe
+                  src={previewUrl}
+                  title="Document Preview"
+                  width="100%"
+                  height="500px"
+                  style={{ border: "none" }}
+                />
+              </div>
+            </div>
+          )}
+        </div> */}
         {filteredData.length === 0 && !yearLoading && (
           <div className={styles.noData}>
             No documents found matching your criteria.

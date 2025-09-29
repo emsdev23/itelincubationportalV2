@@ -244,15 +244,26 @@ const StartupDashboard = () => {
 
   // Calculate stats based on actual API data (localCompanyDoc)
   const totalDocuments = localCompanyDoc.length;
+
+  // Count documents that are submitted AND not obsolete
   const submittedDocuments = localCompanyDoc.filter(
-    (d) => d.status === "Submitted"
+    (d) =>
+      d.status === "Submitted" && d.collecteddocobsoletestate !== "Obsolete"
   ).length;
+
+  // Pending: status is Pending or Obsolete
   const pendingDocuments = localCompanyDoc.filter(
-    (d) => d.status === "Pending"
+    (d) =>
+      d.status === "Pending" ||
+      (d.status === "Submitted" && d.collecteddocobsoletestate === "Obsolete")
   ).length;
+
+  // Overdue: still the same
   const overdueDocuments = localCompanyDoc.filter(
     (d) => d.status === "Overdue"
   ).length;
+
+  // Completion rate: submitted / total
   const completionRate =
     totalDocuments > 0 ? (submittedDocuments / totalDocuments) * 100 : 0;
 
@@ -813,9 +824,23 @@ const StartupDashboard = () => {
                         : "N/A"}
                     </td>
                     <td>
-                      {doc.collecteddocobsoletestate
-                        ? doc.collecteddocobsoletestate
-                        : "--"}
+                      {doc.collecteddocobsoletestate ? (
+                        <p
+                          style={{
+                            background: "#ff8787",
+                            color: "#c92a2a",
+                            borderRadius: "4px",
+                            padding: "2px 6px",
+                            display: "inline-block",
+                            fontWeight: "600",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {doc.collecteddocobsoletestate}
+                        </p>
+                      ) : (
+                        "---"
+                      )}
                     </td>
                     <td className="text-right">
                       <div

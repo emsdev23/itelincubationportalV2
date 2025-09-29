@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
+import { FaTrash,FaEdit } from "react-icons/fa";
+import { FaT } from "react-icons/fa6";
 
 export default function DocSubCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -286,25 +288,44 @@ export default function DocSubCatTable() {
                         ? subcat.docsubcatcreatedby
                         : "Admin"}
                     </td>
-                    <td>{subcat.docsubcatcreatedtime || ""}</td>
+                    <td>
+                      {new Date(subcat.docsubcatcreatedtime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false
+                        }).replace(",", "")}
+                    </td>
                     <td>
                       {isNaN(subcat.docsubcatmodifiedby)
                         ? subcat.docsubcatmodifiedby
                         : "Admin"}
                     </td>
-                    <td>{subcat.docsubcatmodifiedtime || ""}</td>
+                    <td>{new Date(subcat.docsubcatmodifiedtime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false
+                        }).replace(",", "")}
+                        </td>
                     <td>
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(subcat)}
                       >
-                        Edit
+                        <FaEdit size={18}/>
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(subcat.docsubcatrecid)}
                       >
-                        Delete
+                        <FaTrash size={18}/>
                       </button>
                     </td>
                   </tr>

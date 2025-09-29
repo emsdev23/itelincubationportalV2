@@ -5,37 +5,55 @@ import styles from "./FundingStageChart.module.css";
 const FundingStageChart = ({ byStage }) => {
   if (!byStage || byStage.length === 0) return <p>No data available</p>;
 
-  // ✅ prepare data
-  const categories = byStage.map((item) => item.startupstagesname);
-  const data = byStage.map((item) => item.incubatees_count);
+  // ✅ Define desired order
+  const stageOrder = [
+    "Expansion Stage",
+    "Growth Stage",
+    "Early Stage",
+    "Seed Stage",
+    "Pre Seed Stage",
+  ];
+
+  // Sort byStage array based on stageOrder
+  const sortedStages = [...byStage].sort(
+    (a, b) =>
+      stageOrder.indexOf(a.startupstagesname) -
+      stageOrder.indexOf(b.startupstagesname)
+  );
+
+  // Prepare data
+  const categories = sortedStages.map((item) => item.startupstagesname);
+  const data = sortedStages.map((item) => item.incubatees_count);
+
+  // Get current date and time string: YYYY-MM-DD_HH-MM-SS
+  const now = new Date();
+  const pad = (num) => num.toString().padStart(2, "0");
+  const dateTimeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+    now.getDate()
+  )}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 
   const options = {
     chart: {
       type: "bar",
-      toolbar: { show: true }, // ✅ CSV/PNG/SVG export
-    },
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        columnWidth: "50%",
+      toolbar: {
+        show: true,
+        export: {
+          csv: { filename: `StageBased_${dateTimeStr}` },
+          svg: { filename: `StageBased_${dateTimeStr}` },
+          png: { filename: `StageBased_${dateTimeStr}` },
+        },
       },
     },
+    plotOptions: { bar: { borderRadius: 4, columnWidth: "50%" } },
     colors: ["#3b82f6"],
     dataLabels: { enabled: false },
     xaxis: {
       categories,
       labels: { style: { fontSize: "12px", colors: "#6b7280" } },
     },
-    yaxis: {
-      labels: { style: { fontSize: "12px", colors: "#6b7280" } },
-    },
-    tooltip: {
-      y: { formatter: (val) => `${val} companies` },
-    },
-    grid: {
-      borderColor: "#e5e7eb",
-      strokeDashArray: 3,
-    },
+    yaxis: { labels: { style: { fontSize: "12px", colors: "#6b7280" } } },
+    tooltip: { y: { formatter: (val) => `${val} companies` } },
+    grid: { borderColor: "#e5e7eb", strokeDashArray: 3 },
     legend: { show: false },
   };
 
@@ -48,7 +66,7 @@ const FundingStageChart = ({ byStage }) => {
       </div>
       <div className={styles.content}>
         <div className={styles.statsGrid}>
-          {byStage.map((stage) => (
+          {sortedStages.map((stage) => (
             <div key={stage.startupstagesname} className={styles.statItem}>
               <div className={styles.statValue}>{stage.incubatees_count}</div>
               <div className={styles.statLabel}>{stage.startupstagesname}</div>
@@ -60,7 +78,7 @@ const FundingStageChart = ({ byStage }) => {
             options={options}
             series={series}
             type="bar"
-            height="100%" // ✅ respects .chartWrapper { height:200px }
+            height="100%"
             width="100%"
           />
         </div>
