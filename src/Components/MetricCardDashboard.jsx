@@ -1,15 +1,13 @@
-import React from "react";
-import styles from "./MetricCardDashboard.module.css"; // ⬅️ import the CSS module
+import React, { useContext } from "react";
+import styles from "./MetricCardDashboard.module.css"; // CSS module
 import MetricCard from "./MetricCard";
-import {
-  Building2,
-  DollarSign,
-  Users,
-  TrendingUp,
-  IndianRupee,
-} from "lucide-react";
+import { DataContext } from "../Components/Datafetching/DataProvider";
+
+import { Building2, Users, TrendingUp } from "lucide-react";
 
 const MetricCardDashboard = ({ stats }) => {
+  const { companyDoc } = useContext(DataContext);
+
   const {
     total_founders = 0,
     total_incubatees = 0,
@@ -17,6 +15,12 @@ const MetricCardDashboard = ({ stats }) => {
   } = stats || {};
 
   if (!stats) return <p>Loading...</p>;
+
+  // ✅ Count overdue documents
+  const overdueDocuments =
+    companyDoc?.filter((doc) => doc.status === "Overdue").length || 0;
+
+  console.log(total_founders, total_incubatees, overdueDocuments);
   return (
     <main className={styles.dashboardMain}>
       {/* Key Metrics */}
@@ -30,18 +34,9 @@ const MetricCardDashboard = ({ stats }) => {
           trend={{ value: 12, isPositive: true }}
         />
 
-        {/* <MetricCard
-          title="Total Networth"
-          value={`₹${total_share} CR`}
-          subtitle="Combined valuation"
-          icon={<IndianRupee size={20} />}
-          variant="success"
-          trend={{ value: 8.5, isPositive: true }}
-        /> */}
-
         <MetricCard
           title="Total Founders"
-          value={total_incubatees}
+          value={total_founders}
           subtitle="Registered entrepreneurs"
           icon={<Users size={20} />}
           variant="default"
@@ -50,11 +45,11 @@ const MetricCardDashboard = ({ stats }) => {
 
         <MetricCard
           title="Overdue Documents"
-          value="0"
+          value={overdueDocuments}
           subtitle="Require immediate attention"
           icon={<TrendingUp size={20} />}
           variant="warning"
-          trend={{ value: 2, isPositive: false }}
+          trend={{ value: overdueDocuments, isPositive: false }}
         />
       </div>
     </main>
