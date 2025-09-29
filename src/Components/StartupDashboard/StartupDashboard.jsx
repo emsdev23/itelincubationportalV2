@@ -3,6 +3,8 @@ import styles from "./StartupDashboard.module.css";
 import companyLogo from "../../Images/company6.png";
 import DocumentUploadModal from "./DocumentUploadModal";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
 // import ChangePasswordModal from "./ChangePasswordModal";
 
 import {
@@ -53,6 +55,9 @@ const StartupDashboard = () => {
   } = useContext(DataContext);
 
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -316,11 +321,19 @@ const StartupDashboard = () => {
       const data = await response.json();
 
       if (data.statusCode === 200 && data.data) {
-        window.open(data.data, "_blank");
+        // Open preview modal instead of new tab
+        setPreviewUrl(data.data);
+        setIsPreviewOpen(true);
+      } else {
+        throw new Error(data.message || "Failed to fetch document");
       }
     } catch (error) {
       console.error("Error fetching file:", error);
-      alert("Error loading file: " + error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Unable to load document: " + error.message,
+      });
     }
   };
 
@@ -370,19 +383,28 @@ const StartupDashboard = () => {
 
   const handleAbolishDocument = async (filepath) => {
     try {
-      // Show confirmation dialog
-      const confirmed = window.confirm(
-        "Are you sure you want to mark this document as Obselete? This action cannot be undone."
-      );
+      // ✅ Show confirmation dialog
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to mark this document as Obsolete? This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, mark it!",
+        cancelButtonText: "Cancel",
+      });
 
-      if (!confirmed) return;
+      if (!result.isConfirmed) return;
 
-      // Get the user ID and token from sessionStorage (same as other functions)
+      // Get the user ID and token from sessionStorage
       const userId = sessionStorage.getItem("userid");
       const token = sessionStorage.getItem("token");
 
       if (!userId || !token) {
-        alert("User authentication not found. Please login again.");
+        Swal.fire(
+          "Error",
+          "User authentication not found. Please login again.",
+          "error"
+        );
         return;
       }
 
@@ -394,35 +416,44 @@ const StartupDashboard = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            url: filepath,
-          }),
+          body: JSON.stringify({ url: filepath }),
         }
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Document marked as obsolete:", result);
+      const resultData = await response.json();
 
-        // Show success message
-        alert("Document has been successfully marked as obsolete.");
+      if (response.ok && resultData.statusCode === 200) {
+        console.log("Document marked as obsolete:", resultData);
+
+        // ✅ Success SweetAlert
+        Swal.fire(
+          "Marked Obsolete!",
+          "Document has been successfully marked as obsolete.",
+          "success"
+        );
 
         // Refresh the documents list
         if (refreshCompanyDocuments) {
           await refreshCompanyDocuments();
-        } else {
+        } else if (fetchCompanyDocuments) {
           await fetchCompanyDocuments();
         }
       } else {
-        console.error(
-          "Failed to mark document as obsolete:",
-          response.statusText
+        console.error("Failed to mark document as obsolete:", resultData);
+        Swal.fire(
+          "Failed",
+          resultData.message ||
+            "Failed to mark document as obsolete. Please try again.",
+          "error"
         );
-        alert("Failed to mark document as obsolete. Please try again.");
       }
     } catch (error) {
       console.error("Error marking document as obsolete:", error);
-      alert("An error occurred while marking the document as obsolete.");
+      Swal.fire(
+        "Error",
+        "An error occurred while marking the document as obsolete.",
+        "error"
+      );
     }
   };
 
@@ -719,6 +750,7 @@ const StartupDashboard = () => {
                 <th>Periodicity</th>
                 <th>Upload Date</th>
                 <th>Due Date</th>
+                <th>Doc State</th>
                 <th>{}</th>
               </tr>
             </thead>
@@ -754,8 +786,20 @@ const StartupDashboard = () => {
                           ).toLocaleDateString()
                         : "N/A"}
                     </td>
+                    <td>
+                      {doc.collecteddocobsoletestate
+                        ? doc.collecteddocobsoletestate
+                        : "--"}
+                    </td>
                     <td className="text-right">
-                      <div className="flex gap-2 justify-end">
+                      <div
+                        className="flex gap-2 justify-end"
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         {doc.filepath && doc.status === "Submitted" ? (
                           <button
                             className={styles.buttonPrimary}
@@ -774,7 +818,7 @@ const StartupDashboard = () => {
                         )}
 
                         {/* Abolish Button - Only show if document has filepath */}
-                        {doc.filepath && (
+                        {doc.collecteddocobsoletestate === "Not Obsolete" && (
                           <button
                             style={{
                               background: "#ff8787",
@@ -805,6 +849,28 @@ const StartupDashboard = () => {
               )}
             </tbody>
           </table>
+
+          <div>
+            {isPreviewOpen && (
+              <div className={styles.previewModal}>
+                <div className={styles.previewContent}>
+                  <button
+                    className={styles.closeButton}
+                    onClick={() => setIsPreviewOpen(false)}
+                  >
+                    ✖
+                  </button>
+                  <iframe
+                    src={previewUrl}
+                    title="Document Preview"
+                    width="100%"
+                    height="500px"
+                    style={{ border: "none" }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Pagination Controls */}
           {filteredDocuments.length > 0 && (

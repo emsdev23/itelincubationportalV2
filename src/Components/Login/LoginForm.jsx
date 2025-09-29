@@ -6,8 +6,10 @@ import { Eye, EyeOff, Lock, User } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../Datafetching/api"; // axios instance
 import { DataContext } from "../Datafetching/DataProvider";
+import ForgotPasswordModal from "../StartupDashboard/ForgotPasswordModal";
 
 const LoginForm = () => {
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { setUserid, setroleid } = useContext(DataContext); // ✅ access setUserid
@@ -17,6 +19,7 @@ const LoginForm = () => {
     password: "",
   });
 
+  console.log("email", formData.username);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,10 +39,15 @@ const LoginForm = () => {
       sessionStorage.setItem("userid", userid); // no need to stringify
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("roleid", roleid);
+      sessionStorage.setItem("email", formData.username);
 
       // Update context so dashboard fetches data automatically
       setUserid(userid);
       setroleid(roleid);
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+      }));
 
       // Redirect based on role
       if (roleid === "1") {
@@ -155,20 +163,29 @@ const LoginForm = () => {
               </button>
 
               <div className={styles.textCenter}>
-                <button type="button" className={styles.link}>
+                <button
+                  type="button"
+                  className={styles.link}
+                  onClick={() => setIsForgotOpen(true)}
+                >
                   Forgot your password?
                 </button>
               </div>
+
+              <ForgotPasswordModal
+                isOpen={isForgotOpen}
+                onClose={() => setIsForgotOpen(false)}
+              />
             </form>
           </div>
         </div>
 
-        <div className={styles.footer}>
+        {/* <div className={styles.footer}>
           <p>
             Don&apos;t have an account?{" "}
             <button className={styles.linkBold}>Sign up</button>
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

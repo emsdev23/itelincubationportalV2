@@ -243,6 +243,87 @@ const DocumentUploadModal = ({
     }
   };
 
+  // const handleUpload = async () => {
+  //   if (
+  //     !selectedFile ||
+  //     !selectedCategory ||
+  //     !selectedSubCategory ||
+  //     !selectedDocInfo
+  //   ) {
+  //     setError("Please fill all fields and select a file");
+  //     return;
+  //   }
+
+  //   setLoading((prev) => ({ ...prev, uploading: true }));
+  //   setError("");
+  //   setSuccess("");
+
+  //   try {
+  //     const base64 = await convertToBase64(selectedFile);
+
+  //     // Extract file extension
+  //     const fileExtension = getFileExtension(selectedFile.name);
+
+  //     const docfordate = selectedDate
+  //       ? new Date(selectedDate).toISOString().split("T")[0] + "T00:00:00"
+  //       : new Date().toISOString().split("T")[0] + "T00:00:00";
+
+  //     const uploadData = {
+  //       filebase64: base64,
+  //       userid: usersrecid,
+  //       incubaterecid: incubateesrecid,
+  //       doccatid: parseInt(selectedCategory),
+  //       docsubcatid: parseInt(selectedSubCategory),
+  //       docid: parseInt(selectedDocInfo),
+  //       docfordate: docfordate,
+  //       filetype: fileExtension, // Add the file extension here
+  //     };
+
+  //     console.log("Upload data:", uploadData);
+
+  //     const token = sessionStorage.getItem("token");
+  //     const response = await fetch(
+  //       "http://121.242.232.212:8086/itelinc/resources/generic/adddocument",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(uploadData),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       const errorMessage =
+  //         data?.message || `HTTP error! status: ${response.message}`;
+
+  //       throw new Error(errorMessage);
+  //     }
+
+  //     const data = await response.json();
+  //     if (data.statusCode === 200) {
+  //       setSuccess("Document uploaded successfully!");
+
+  //       // Call the onUploadSuccess callback to refresh the parent component
+  //       if (onUploadSuccess) {
+  //         await onUploadSuccess();
+  //       }
+
+  //       setTimeout(() => {
+  //         handleClose();
+  //       }, 1500);
+  //     } else {
+  //       setError("Upload failed: " + (data.message || "Unknown error"));
+  //     }
+  //   } catch (err) {
+  //     setError("Error uploading file: " + (err.message || "Unknown error"));
+  //     console.error("Upload error:", err);
+  //   } finally {
+  //     setLoading((prev) => ({ ...prev, uploading: false }));
+  //   }
+  // };
+
   const handleUpload = async () => {
     if (
       !selectedFile ||
@@ -276,7 +357,7 @@ const DocumentUploadModal = ({
         docsubcatid: parseInt(selectedSubCategory),
         docid: parseInt(selectedDocInfo),
         docfordate: docfordate,
-        filetype: fileExtension, // Add the file extension here
+        filetype: fileExtension, // ✅ added file type
       };
 
       console.log("Upload data:", uploadData);
@@ -294,15 +375,20 @@ const DocumentUploadModal = ({
         }
       );
 
+      // Always parse JSON once
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Use backend's message if available
+        const errorMessage =
+          data?.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      // ✅ Success flow
       if (data.statusCode === 200) {
-        setSuccess("Document uploaded successfully!");
+        setSuccess(data.message || "Document uploaded successfully!");
 
-        // Call the onUploadSuccess callback to refresh the parent component
         if (onUploadSuccess) {
           await onUploadSuccess();
         }

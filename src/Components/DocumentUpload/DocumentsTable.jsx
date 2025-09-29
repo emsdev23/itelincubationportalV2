@@ -188,7 +188,7 @@ export default function DocumentsTable() {
     }
 
     const baseUrl = editDoc
-      ? "http://121.242.232.212:8086/itelinc/updateDocument"
+      ? "http://121.242.232.212:8086/itelinc/updateDocumentDetails"
       : "http://121.242.232.212:8086/itelinc/addDocumentDetails";
 
     const url = `${baseUrl}?${params.toString()}`;

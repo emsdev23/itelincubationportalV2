@@ -5,9 +5,10 @@ import Swal from "sweetalert2";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const EmailID = sessionStorage.getItem("email");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    email: EmailID,
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -88,7 +89,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       <div className={styles.modalContent}>
         <h2>Change Password ?</h2>
         <form onSubmit={handleSubmit} className={styles.form}>
-          <label>
+          {/* <label>
             Email
             <input
               type="email"
@@ -98,7 +99,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               required
               placeholder="Enter your email"
             />
-          </label>
+          </label> */}
 
           <label>
             Old Password

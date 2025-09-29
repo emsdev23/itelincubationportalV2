@@ -135,13 +135,13 @@ const Navbar = () => {
               </button>
             </NavLink>
 
-            <button
+            {/* <button
               className={styles.btnPrimary}
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className={styles.icon} />
               Add Incubatee
-            </button>
+            </button> */}
 
             <button
               className={styles.btnPrimary}

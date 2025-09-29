@@ -30,14 +30,14 @@ const MetricCardDashboard = ({ stats }) => {
           trend={{ value: 12, isPositive: true }}
         />
 
-        <MetricCard
+        {/* <MetricCard
           title="Total Networth"
           value={`₹${total_share} CR`}
           subtitle="Combined valuation"
           icon={<IndianRupee size={20} />}
           variant="success"
           trend={{ value: 8.5, isPositive: true }}
-        />
+        /> */}
 
         <MetricCard
           title="Total Founders"

@@ -1,11 +1,13 @@
 .dashboardMain {
-  max-width: 1280px; /* like max-w-7xl */
+  /* max-width: 1280px; */
+  /* like max-w-7xl */
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
 .metricsGrid {
-  display: grid;
+  display: flex;
+  justify-content: space-between;
   grid-template-columns: 1fr;
   gap: 1.5rem; /* like gap-6 */
   margin-bottom: 2rem;
