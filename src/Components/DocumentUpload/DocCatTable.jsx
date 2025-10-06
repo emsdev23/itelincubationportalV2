@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
-import { FaTrash,FaEdit } from "react-icons/fa";
+import { FaTrash, FaEdit, FaPlus, FaSpinner } from "react-icons/fa";
 
 export default function DocCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -17,7 +17,12 @@ export default function DocCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const IP = "http://121.242.232.212:8089/itelinc"
+  const IP = "http://121.242.232.212:8089/itelinc";
+  
+  // Loading states for operations
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // ✅ Fetch all categories
   const fetchCategories = () => {
@@ -52,6 +57,7 @@ export default function DocCatTable() {
   };
 
   const openEditModal = (cat) => {
+    setEditingId(cat.doccatrecid);
     setEditCat(cat);
     setFormData({
       doccatname: cat.doccatname || "",
@@ -65,7 +71,7 @@ export default function DocCatTable() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Delete with SweetAlert
+  // ✅ Delete with SweetAlert and loading state
   const handleDelete = (catId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -76,6 +82,7 @@ export default function DocCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
+        setDeletingId(catId);
         const deleteUrl = `${IP}/deletedoccat?doccatrecid=${catId}&doccatmodifiedby=${userId}`;
 
         fetch(deleteUrl, {
@@ -102,12 +109,15 @@ export default function DocCatTable() {
           .catch((err) => {
             console.error("Error deleting category:", err);
             Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
+          })
+          .finally(() => {
+            setDeletingId(null);
           });
       }
     });
   };
 
-  // ✅ FIXED: Add/Update with proper URL encoding
+  // ✅ FIXED: Add/Update with proper URL encoding and loading state
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -173,6 +183,7 @@ export default function DocCatTable() {
           } else {
             setIsModalOpen(false);
             setEditCat(null);
+            setEditingId(null);
             setFormData({ doccatname: "", doccatdescription: "" });
             fetchCategories();
             Swal.fire(
@@ -192,15 +203,26 @@ export default function DocCatTable() {
         setError(`Failed to save: ${err.message}`);
         Swal.fire("Error", `Failed to save category: ${err.message}`, "error");
       })
-      .finally(() => setIsSubmitting(false));
+      .finally(() => {
+        setIsSubmitting(false);
+        setEditingId(null);
+      });
   };
 
   return (
     <div className="doccat-container">
       <div className="doccat-header">
         <h2 className="doccat-title">📂 Document Categories</h2>
-        <button className="btn-add-category" onClick={openAddModal}>
-          + Add Category
+        <button className="btn-add-category" onClick={openAddModal} disabled={isAdding}>
+          {isAdding ? (
+            <>
+              <FaSpinner className="spinner" size={16} /> Adding...
+            </>
+          ) : (
+            <>
+              <FaPlus size={16} /> Add Category
+            </>
+          )}
         </button>
       </div>
 
@@ -248,14 +270,24 @@ export default function DocCatTable() {
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(cat)}
+                        disabled={editingId === cat.doccatrecid || deletingId === cat.doccatrecid}
                       >
-                        < FaEdit size={18}/>
+                        {editingId === cat.doccatrecid ? (
+                          <FaSpinner className="spinner" size={18} />
+                        ) : (
+                          <FaEdit size={18} />
+                        )}
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(cat.doccatrecid)}
+                        disabled={deletingId === cat.doccatrecid || editingId === cat.doccatrecid}
                       >
-                        <FaTrash size={18} />
+                        {deletingId === cat.doccatrecid ? (
+                          <FaSpinner className="spinner" size={18} />
+                        ) : (
+                          <FaTrash size={18} />
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -279,11 +311,27 @@ export default function DocCatTable() {
               <h3>{editCat ? "Edit Category" : "Add Category"}</h3>
               <button
                 className="btn-close"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditCat(null);
+                  setEditingId(null);
+                }}
+                disabled={isSubmitting}
               >
                 &times;
               </button>
             </div>
+            
+            {/* Loading overlay for modal */}
+            {isSubmitting && (
+              <div className="modal-loading-overlay">
+                <div className="modal-loading-spinner">
+                  <FaSpinner className="spinner" size={24} />
+                  <p>{editCat ? "Updating category..." : "Saving category..."}</p>
+                </div>
+              </div>
+            )}
+            
             <form className="doccat-form" onSubmit={handleSubmit}>
               <label>
                 Category Name *
@@ -294,6 +342,7 @@ export default function DocCatTable() {
                   onChange={handleChange}
                   required
                   placeholder="Enter category name"
+                  disabled={isSubmitting}
                 />
               </label>
               <label>
@@ -305,6 +354,7 @@ export default function DocCatTable() {
                   required
                   placeholder="Enter category description"
                   rows="3"
+                  disabled={isSubmitting}
                 />
               </label>
 
@@ -314,7 +364,11 @@ export default function DocCatTable() {
                 <button
                   type="button"
                   className="btn-cancel"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditCat(null);
+                    setEditingId(null);
+                  }}
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -324,10 +378,33 @@ export default function DocCatTable() {
                   className="btn-save"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Saving..." : editCat ? "Update" : "Save"}
+                  {isSubmitting ? (
+                    <>
+                      <FaSpinner className="spinner" size={14} /> 
+                      {editCat ? "Updating..." : "Saving..."}
+                    </>
+                  ) : (
+                    editCat ? "Update" : "Save"
+                  )}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading overlay for operations */}
+      {(isAdding || editingId !== null || deletingId !== null) && (
+        <div className="loading-overlay">
+          <div className="loading-spinner">
+            <FaSpinner className="spinner" size={40} />
+            <p>
+              {isAdding 
+                ? "Adding category..." 
+                : editingId !== null 
+                  ? "Updating category..." 
+                  : "Deleting category..."}
+            </p>
           </div>
         </div>
       )}

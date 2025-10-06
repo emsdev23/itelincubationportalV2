@@ -1,6 +1,7 @@
 .user-association-container {
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
 }
 
 .user-association-header {
@@ -15,6 +16,8 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+  display: flex;
+  align-items: center;
 }
 
 .error-message {
@@ -44,6 +47,11 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.user-association-group:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .user-association-group-header {
@@ -53,6 +61,12 @@
   padding: 12px 16px;
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.user-association-group-header:hover {
+  background-color: #eeeeee;
+  cursor: pointer;
 }
 
 .user-info {
@@ -107,10 +121,20 @@
   align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.user-association-item:hover {
+  background-color: #f9f9f9;
 }
 
 .user-association-item:last-child {
   border-bottom: none;
+}
+
+.user-association-item.active {
+  background-color: #f0f7ff;
+  border-left: 3px solid #1976d2;
 }
 
 .user-association-details {
@@ -206,6 +230,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
 .user-association-modal-content {
@@ -216,6 +241,7 @@
   max-height: 80vh;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .user-association-modal-header {
@@ -339,6 +365,11 @@
   background-color: #f0f7ff;
 }
 
+.incubatee-checkbox-item.selected {
+  background-color: #e3f2fd;
+  border-left: 3px solid #1976d2;
+}
+
 .incubatee-checkbox-item input[type="checkbox"] {
   width: 18px;
   height: 18px;
@@ -428,6 +459,323 @@
   vertical-align: middle;
 }
 
+/* Modal Loading Overlay */
+.modal-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  backdrop-filter: blur(2px);
+}
+
+.modal-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.modal-loading-spinner .spinner {
+  font-size: 24px;
+  color: #1976d2;
+  margin-bottom: 12px;
+}
+
+.modal-loading-spinner p {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Delete operation loading state */
+.btn-delete.loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn-delete.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid rgba(211, 47, 47, 0.3);
+  border-radius: 50%;
+  border-top-color: #d32f2f;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Toast notification styles for operation feedback */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  z-index: 2000;
+  min-width: 300px;
+  animation: slideInRight 0.3s ease-out, slideOutRight 0.3s ease-in 2.7s forwards;
+}
+
+.toast-notification.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+}
+
+.toast-notification.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
+
+.toast-notification.warning {
+  background-color: #fff8e1;
+  color: #ff8f00;
+  border-left: 4px solid #ff8f00;
+}
+
+.toast-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.toast-message {
+  flex: 1;
+  font-weight: 500;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Loading overlay for the entire container */
+.container-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  border-radius: 8px;
+}
+
+.container-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container-loading-spinner .spinner {
+  font-size: 32px;
+  color: #1976d2;
+  margin-bottom: 16px;
+}
+
+.container-loading-spinner p {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Loading skeleton for content */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-item {
+  height: 64px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-group-header {
+  height: 60px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.status-badge.active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.pending {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+/* Search input styling */
+.search-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757575;
+}
+
+/* Filter pills */
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-pill {
+  padding: 6px 12px;
+  border-radius: 16px;
+  background-color: #f1f3f5;
+  color: #495057;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.filter-pill:hover {
+  background-color: #e9ecef;
+}
+
+.filter-pill.active {
+  background-color: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+/* Animation for new items */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-association-item.new {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Focus styles for accessibility */
+.btn-edit:focus,
+.btn-delete:focus,
+.btn-new-association:focus,
+.btn-close:focus,
+.btn-cancel:focus,
+.btn-save:focus,
+.user-select:focus,
+.incubatee-checkbox-item input[type="checkbox"]:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .user-association-group-header {
+    border-bottom: 2px solid #000;
+  }
+  
+  .btn-edit,
+  .btn-delete {
+    border: 1px solid currentColor;
+  }
+  
+  .user-association-item {
+    border-bottom: 1px solid #000;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .user-association-container {
@@ -468,5 +816,28 @@
   
   .incubatees-checklist {
     max-height: 250px;
+  }
+  
+  .filter-pills {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-association-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .btn-new-association {
+    align-self: stretch;
+    justify-content: center;
+  }
+  
+  .toast-notification {
+    left: 10px;
+    right: 10px;
+    min-width: auto;
   }
 }

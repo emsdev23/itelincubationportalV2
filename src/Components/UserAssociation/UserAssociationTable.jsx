@@ -21,13 +21,14 @@ export default function UserAssociationTable() {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedIncubateesForNew, setSelectedIncubateesForNew] = useState([]);
   const [deletingId, setDeletingId] = useState(null); // Track which association is being deleted
+  const [isDeleting, setIsDeleting] = useState(false); // Track if delete operation is in progress
 
   // Fetch user associations
   const fetchAssociations = () => {
     setLoading(true);
     setError(null);
     
-    fetch(`${LOCAL_IP}/itelinc/getUserUnassociated`, {
+    fetch(`${IP}/itelinc/resources/generic/getuserasslist`, {
       method: "POST",
       mode: "cors",
       headers: {
@@ -35,7 +36,7 @@ export default function UserAssociationTable() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        userId: userId || 32
+        userId: userId || null
       })
     })
       .then((res) => {
@@ -142,6 +143,7 @@ export default function UserAssociationTable() {
           userMap[userId] = {
             usersrecid: userId,
             usersname: item.usersname,
+            userscreatedby: item.userscreatedby, // Add this field
             associations: []
           };
         }
@@ -161,6 +163,7 @@ export default function UserAssociationTable() {
           userMap[userId] = {
             usersrecid: userId,
             usersname: item.usersname,
+            userscreatedby: item.userscreatedby || "N/A", // Add this field with fallback
             associations: []
           };
         }
@@ -436,12 +439,12 @@ export default function UserAssociationTable() {
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setDeletingId(associationId);
+      showLoaderOnConfirm: true,
+      preConfirm: () => {
+        setIsDeleting(true);
         const url = `${IP}/itelinc/deleteUserIncubationAssociation?usrincassnmodifiedby=${userId || "1"}&usrincassnrecid=${associationId}`;
         
-        fetch(url, {
+        return fetch(url, {
           method: "POST",
           mode: "cors",
           headers: {
@@ -458,19 +461,23 @@ export default function UserAssociationTable() {
           })
           .then((data) => {
             if (data.statusCode === 200) {
-              Swal.fire("Deleted!", "Association deleted successfully!", "success");
-              fetchAssociations();
+              return data;
             } else {
               throw new Error(data.message || "Failed to delete association");
             }
           })
-          .catch((err) => {
-            console.error("Error deleting association:", err);
-            Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
+          .catch((error) => {
+            Swal.showValidationMessage(`Request failed: ${error.message}`);
           })
           .finally(() => {
-            setDeletingId(null);
+            setIsDeleting(false);
           });
+      },
+      allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire("Deleted!", "Association deleted successfully!", "success");
+        fetchAssociations();
       }
     });
   };
@@ -508,7 +515,7 @@ export default function UserAssociationTable() {
                     {user.usersname}
                   </h3>
                   <span className="user-association-createdby">
-                    Created by: {user.associations[0]?.userscreatedby || 'N/A'}
+                    Created by: {user.userscreatedby}
                   </span>
                 </div>
                 <button
@@ -533,16 +540,16 @@ export default function UserAssociationTable() {
                             Created: {formatDate(association.usrincassncreatedtime)}
                           </span>
                           <span className="user-association-createdby">
-                            Associated by: {association.usrincassncreatedbyname}
+                            Associated by: {association.usrincassncreatedbyname || "N/A"}
                           </span>
                         </div>
                       </div>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(association.usrincassnrecid)}
-                        disabled={deletingId === association.usrincassnrecid}
+                        disabled={isDeleting}
                       >
-                        {deletingId === association.usrincassnrecid ? (
+                        {isDeleting ? (
                           <FaSpinner className="spinner" size={16} />
                         ) : (
                           <FaTrash size={16} />
@@ -616,6 +623,16 @@ export default function UserAssociationTable() {
                 )}
               </button>
             </div>
+            
+            {/* Loading overlay for edit modal */}
+            {updateLoading && (
+              <div className="modal-loading-overlay">
+                <div className="modal-loading-spinner">
+                  <FaSpinner className="spinner" size={24} />
+                  <p>Updating associations...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -687,6 +704,16 @@ export default function UserAssociationTable() {
                 )}
               </button>
             </div>
+            
+            {/* Loading overlay for new association modal */}
+            {updateLoading && (
+              <div className="modal-loading-overlay">
+                <div className="modal-loading-spinner">
+                  <FaSpinner className="spinner" size={24} />
+                  <p>Creating associations...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

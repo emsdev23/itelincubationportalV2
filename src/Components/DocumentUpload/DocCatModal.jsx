@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { FaSpinner } from "react-icons/fa";
 
-export default function DocCatModal({ isOpen, onClose, onSave, editData }) {
+export default function DocCatModal({ isOpen, onClose, onSave, editData, isLoading = false }) {
   const [formData, setFormData] = useState({
     doccatname: "",
     doccatdescription: "",
@@ -12,8 +13,14 @@ export default function DocCatModal({ isOpen, onClose, onSave, editData }) {
         doccatname: editData.doccatname,
         doccatdescription: editData.doccatdescription,
       });
+    } else {
+      // Reset form when adding new category
+      setFormData({
+        doccatname: "",
+        doccatdescription: "",
+      });
     }
-  }, [editData]);
+  }, [editData, isOpen]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,10 +42,21 @@ export default function DocCatModal({ isOpen, onClose, onSave, editData }) {
       <div className="doccat-modal-content">
         <div className="doccat-modal-header">
           <h3>{editData ? "Edit Category" : "Add Category"}</h3>
-          <button className="btn-close" onClick={onClose}>
+          <button className="btn-close" onClick={onClose} disabled={isLoading}>
             &times;
           </button>
         </div>
+        
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="modal-loading-overlay">
+            <div className="modal-loading-spinner">
+              <FaSpinner className="spinner" size={24} />
+              <p>{editData ? "Updating category..." : "Saving category..."}</p>
+            </div>
+          </div>
+        )}
+        
         <form className="doccat-form" onSubmit={handleSubmit}>
           <label>
             Category Name
@@ -48,6 +66,7 @@ export default function DocCatModal({ isOpen, onClose, onSave, editData }) {
               value={formData.doccatname}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
           </label>
           <label>
@@ -57,14 +76,31 @@ export default function DocCatModal({ isOpen, onClose, onSave, editData }) {
               value={formData.doccatdescription}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
           </label>
           <div className="doccat-form-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>
+            <button 
+              type="button" 
+              className="btn-cancel" 
+              onClick={onClose}
+              disabled={isLoading}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn-save">
-              {editData ? "Update" : "Save"}
+            <button 
+              type="submit" 
+              className="btn-save"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <FaSpinner className="spinner" size={14} /> 
+                  {editData ? "Updating..." : "Saving..."}
+                </>
+              ) : (
+                editData ? "Update" : "Save"
+              )}
             </button>
           </div>
         </form>

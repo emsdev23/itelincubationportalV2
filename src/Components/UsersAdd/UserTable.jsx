@@ -611,6 +611,22 @@ export default function UserTable() {
           </table>
         </div>
       )}
+      
+      {/* Loading overlay for operations */}
+      {(isAdding || isUpdating !== null || isDeleting !== null) && (
+        <div className="loading-overlay">
+          <div className="loading-spinner">
+            <FaSpinner className="spinner" size={40} />
+            <p>
+              {isAdding 
+                ? "Adding user..." 
+                : isUpdating !== null 
+                  ? "Updating user..." 
+                  : "Deleting user..."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

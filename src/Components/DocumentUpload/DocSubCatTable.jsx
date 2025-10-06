@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
-import { FaTrash,FaEdit } from "react-icons/fa";
-import { FaT } from "react-icons/fa6";
+import { FaTrash, FaEdit, FaPlus, FaSpinner } from "react-icons/fa";
 
 export default function DocSubCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -20,7 +19,11 @@ export default function DocSubCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const IP = "http://121.242.232.212:8089/itelinc"
+  const IP = "http://121.242.232.212:8089/itelinc";
+  
+  // Loading states for operations
+  const [isDeleting, setIsDeleting] = useState(null); // Store subcategory ID being deleted
+  const [isEditing, setIsEditing] = useState(null); // Store subcategory ID being edited
 
   // Fetch all subcategories
   const fetchSubCategories = () => {
@@ -79,6 +82,7 @@ export default function DocSubCatTable() {
   };
 
   const openEditModal = (subcat) => {
+    setIsEditing(subcat.docsubcatrecid);
     setEditSubCat(subcat);
     setFormData({
       docsubcatname: subcat.docsubcatname || "",
@@ -95,7 +99,7 @@ export default function DocSubCatTable() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Improved Delete with SweetAlert
+  // ✅ Improved Delete with SweetAlert and loading state
   const handleDelete = (subcatId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -106,6 +110,7 @@ export default function DocSubCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsDeleting(subcatId);
         const deleteUrl = `${IP}/deleteDocsubcat?docsubcatrecid=${subcatId}&docsubcatmodifiedby=${
           userId || "32"
         }`;
@@ -134,12 +139,15 @@ export default function DocSubCatTable() {
           .catch((err) => {
             console.error("Error deleting subcategory:", err);
             Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
+          })
+          .finally(() => {
+            setIsDeleting(null);
           });
       }
     });
   };
 
-  // ✅ FIXED: Add/Update with proper URL parameters
+  // ✅ FIXED: Add/Update with proper URL parameters and loading state
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -217,6 +225,7 @@ export default function DocSubCatTable() {
           } else {
             setIsModalOpen(false);
             setEditSubCat(null);
+            setIsEditing(null);
             setFormData({
               docsubcatname: "",
               docsubcatdescription: "",
@@ -244,15 +253,26 @@ export default function DocSubCatTable() {
           "error"
         );
       })
-      .finally(() => setIsSubmitting(false));
+      .finally(() => {
+        setIsSubmitting(false);
+        setIsEditing(null);
+      });
   };
 
   return (
     <div className="doccat-container">
       <div className="doccat-header">
         <h2 className="doccat-title">📂 Document Subcategories</h2>
-        <button className="btn-add-category" onClick={openAddModal}>
-          + Add Subcategory
+        <button className="btn-add-category" onClick={openAddModal} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <FaSpinner className="spinner" size={16} /> Adding...
+            </>
+          ) : (
+            <>
+              <FaPlus size={16} /> Add Subcategory
+            </>
+          )}
         </button>
       </div>
 
@@ -319,14 +339,24 @@ export default function DocSubCatTable() {
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(subcat)}
+                        disabled={isDeleting === subcat.docsubcatrecid || isSubmitting}
                       >
-                        <FaEdit size={18}/>
+                        {isEditing === subcat.docsubcatrecid ? (
+                          <FaSpinner className="spinner" size={18} />
+                        ) : (
+                          <FaEdit size={18} />
+                        )}
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(subcat.docsubcatrecid)}
+                        disabled={isDeleting === subcat.docsubcatrecid || isEditing === subcat.docsubcatrecid}
                       >
-                        <FaTrash size={18}/>
+                        {isDeleting === subcat.docsubcatrecid ? (
+                          <FaSpinner className="spinner" size={18} />
+                        ) : (
+                          <FaTrash size={18} />
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -350,11 +380,27 @@ export default function DocSubCatTable() {
               <h3>{editSubCat ? "Edit Subcategory" : "Add Subcategory"}</h3>
               <button
                 className="btn-close"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditSubCat(null);
+                  setIsEditing(null);
+                }}
+                disabled={isSubmitting}
               >
                 &times;
               </button>
             </div>
+            
+            {/* Loading overlay for modal */}
+            {isSubmitting && (
+              <div className="modal-loading-overlay">
+                <div className="modal-loading-spinner">
+                  <FaSpinner className="spinner" size={24} />
+                  <p>{editSubCat ? "Updating subcategory..." : "Saving subcategory..."}</p>
+                </div>
+              </div>
+            )}
+            
             <form className="doccat-form" onSubmit={handleSubmit}>
               <label>
                 Category *
@@ -363,6 +409,7 @@ export default function DocSubCatTable() {
                   value={formData.docsubcatscatrecid}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting}
                 >
                   <option value="">Select Category</option>
                   {cats.map((cat) => (
@@ -381,6 +428,7 @@ export default function DocSubCatTable() {
                   onChange={handleChange}
                   required
                   placeholder="Enter subcategory name"
+                  disabled={isSubmitting}
                 />
               </label>
               <label>
@@ -392,6 +440,7 @@ export default function DocSubCatTable() {
                   required
                   placeholder="Enter subcategory description"
                   rows="3"
+                  disabled={isSubmitting}
                 />
               </label>
               {error && <div className="modal-error-message">{error}</div>}
@@ -399,7 +448,11 @@ export default function DocSubCatTable() {
                 <button
                   type="button"
                   className="btn-cancel"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditSubCat(null);
+                    setIsEditing(null);
+                  }}
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -409,10 +462,31 @@ export default function DocSubCatTable() {
                   className="btn-save"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Saving..." : editSubCat ? "Update" : "Save"}
+                  {isSubmitting ? (
+                    <>
+                      <FaSpinner className="spinner" size={14} /> 
+                      {editSubCat ? "Updating..." : "Saving..."}
+                    </>
+                  ) : (
+                    editSubCat ? "Update" : "Save"
+                  )}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading overlay for operations */}
+      {(isSubmitting || isDeleting !== null) && (
+        <div className="loading-overlay">
+          <div className="loading-spinner">
+            <FaSpinner className="spinner" size={40} />
+            <p>
+              {isSubmitting 
+                ? (editSubCat ? "Updating subcategory..." : "Saving subcategory...")
+                : "Deleting subcategory..."}
+            </p>
           </div>
         </div>
       )}
