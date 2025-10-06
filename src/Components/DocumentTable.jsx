@@ -401,7 +401,7 @@ export default function DocumentTable() {
               <th>Document Category</th>
               <th>Document Subcategory</th>
               <th>Document Name</th>
-              {Number(roleid) === 1 ? <th>Stage</th> : null}
+              {Number(roleid) === 1 || Number(roleid) === 3 ? <th>Stage</th> : null}
               <th>Submission Date</th>
               <th>Due Date</th>
               <th>Status</th>
@@ -424,7 +424,7 @@ export default function DocumentTable() {
                   <td>{item.doccatname}</td>
                   <td>{item.docsubcatname}</td>
                   <td>{item.documentname}</td>
-                  {Number(roleid) === 1 ? (
+                  {Number(roleid) === 1 || Number(roleid) === 3 ? (
                     <td>
                       <span className={`${styles.badge} ${styles.stage}`}>
                         {item.incubateesstagelevel || "Unknown"}

@@ -182,7 +182,7 @@ export default function CompanyTable({ companyList = [] }) {
                       ).toLocaleDateString()
                     : "-"}
                 </td>
-                {Number(roleid) === 1 && (
+                {Number(roleid) === 1 || Number(roleid) === 3 &&(
                   <td>
                     <button
                       className={styles.buttonPrimary}

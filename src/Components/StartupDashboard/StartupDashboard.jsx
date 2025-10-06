@@ -75,7 +75,7 @@ const StartupDashboard = () => {
 
   // Determine which data to use based on role and admin viewing state
   const getIncubateeData = () => {
-    if (Number(roleid) === 1 && adminviewData) {
+    if (Number(roleid) === 1 || Number(roleid) === 3 && adminviewData) {
       // Admin viewing specific startup - use startupdetails
       return startupdetails?.[0];
     } else if (Number(roleid) === 4) {
@@ -86,7 +86,7 @@ const StartupDashboard = () => {
   };
 
   const getCompanyDocuments = () => {
-    if (Number(roleid) === 1 && adminviewData) {
+    if (Number(roleid) === 1 || Number(roleid) === 3 && adminviewData) {
       // Admin viewing specific startup - use startupcompanyDoc
       return startupcompanyDoc || [];
     } else if (Number(roleid) === 4) {
@@ -513,7 +513,7 @@ const StartupDashboard = () => {
 
           <div className={style.actions}>
             {/* Show back button for admin */}
-            {Number(roleid) === 1 && adminviewData && (
+            {Number(roleid) === 1 || Number(roleid) === 3 && adminviewData && (
               <button
                 className={style.btnPrimary}
                 onClick={handleBackToAdmin}

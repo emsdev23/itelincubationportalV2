@@ -110,7 +110,7 @@ const Navbar = () => {
   console.log(userid, sessionRoleid, token);
 
   // Check if user has roleid 3 (Incubator Operator)
-  const isOperator = roleid === "3" || sessionRoleid === "3";
+  const isOperator = Number(roleid) === 3 || Number(sessionRoleid) === 3;
 
   useEffect(() => {}, []);
   return (
