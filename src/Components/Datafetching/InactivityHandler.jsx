@@ -26,7 +26,7 @@ export function InactivityHandler({ children }) {
 
         if (userid && token) {
           await fetch(
-            "http://121.242.232.212:8086/itelinc/resources/auth/logout",
+            "http://121.242.232.212:8089/itelinc/resources/auth/logout",
             {
               method: "POST",
               headers: {

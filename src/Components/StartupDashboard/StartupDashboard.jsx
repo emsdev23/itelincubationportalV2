@@ -194,7 +194,7 @@ const StartupDashboard = () => {
       const userid = sessionStorage.getItem("userid");
 
       const response = await fetch(
-        "http://121.242.232.212:8086/itelinc/resources/generic/getcompanydocs",
+        "http://121.242.232.212:8089/itelinc/resources/generic/getcompanydocs",
         {
           method: "POST",
           headers: {
@@ -310,7 +310,7 @@ const StartupDashboard = () => {
       const userid = sessionStorage.getItem("userid");
 
       const response = await fetch(
-        "http://121.242.232.212:8086/itelinc/resources/generic/getfileurl",
+        "http://121.242.232.212:8089/itelinc/resources/generic/getfileurl",
         {
           method: "POST",
           headers: {
@@ -446,7 +446,7 @@ const StartupDashboard = () => {
       }
 
       const response = await fetch(
-        `http://121.242.232.212:8086/itelinc/resources/generic/markobsolete?modifiedBy=${userId}`,
+        `http://121.242.232.212:8089/itelinc/resources/generic/markobsolete?modifiedBy=${userId}`,
         {
           method: "POST",
           headers: {

@@ -17,13 +17,14 @@ export default function DocCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const IP = "http://121.242.232.212:8089/itelinc"
 
   // ✅ Fetch all categories
   const fetchCategories = () => {
     setLoading(true);
     setError(null);
 
-    fetch("http://121.242.232.212:8086/itelinc/getDoccatAll", {
+    fetch(`${IP}/getDoccatAll`, {
       method: "GET",
       mode: "cors",
     })
@@ -75,7 +76,7 @@ export default function DocCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        const deleteUrl = `http://121.242.232.212:8086/itelinc/deletedoccat?doccatrecid=${catId}&doccatmodifiedby=${userId}`;
+        const deleteUrl = `${IP}/deletedoccat?doccatrecid=${catId}&doccatmodifiedby=${userId}`;
 
         fetch(deleteUrl, {
           method: "POST",
@@ -137,8 +138,8 @@ export default function DocCatTable() {
     }
 
     const baseUrl = editCat
-      ? "http://121.242.232.212:8086/itelinc/updateDoccat"
-      : "http://121.242.232.212:8086/itelinc/addDoccat";
+      ? `${IP}/updateDoccat`
+      : `${IP}/addDoccat`;
 
     const url = `${baseUrl}?${params.toString()}`;
 

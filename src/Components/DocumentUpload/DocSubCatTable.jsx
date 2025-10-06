@@ -20,12 +20,13 @@ export default function DocSubCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const IP = "http://121.242.232.212:8089/itelinc"
 
   // Fetch all subcategories
   const fetchSubCategories = () => {
     setLoading(true);
     setError(null);
-    fetch("http://121.242.232.212:8086/itelinc/getDocsubcatAll", {
+    fetch(`${IP}/getDocsubcatAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -44,7 +45,7 @@ export default function DocSubCatTable() {
 
   // Fetch categories for dropdown
   const fetchCategories = () => {
-    fetch("http://121.242.232.212:8086/itelinc/getDoccatAll", {
+    fetch(`${IP}/getDoccatAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -105,7 +106,7 @@ export default function DocSubCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        const deleteUrl = `http://121.242.232.212:8086/itelinc/deleteDocsubcat?docsubcatrecid=${subcatId}&docsubcatmodifiedby=${
+        const deleteUrl = `${IP}/deleteDocsubcat?docsubcatrecid=${subcatId}&docsubcatmodifiedby=${
           userId || "32"
         }`;
 
@@ -175,8 +176,8 @@ export default function DocSubCatTable() {
     }
 
     const baseUrl = editSubCat
-      ? "http://121.242.232.212:8086/itelinc/updateDocsubcat"
-      : "http://121.242.232.212:8086/itelinc/addDocsubcat";
+      ? `${IP}/updateDocsubcat`
+      : `${IP}/addDocsubcat`;
 
     const url = `${baseUrl}?${params.toString()}`;
 

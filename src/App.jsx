@@ -8,6 +8,8 @@ import LoginForm from "./Components/Login/LoginForm";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { DataProvider } from "./Components/Datafetching/DataProvider";
 import DocumentManagementPage from "./Components/DocumentUpload/DocumentManagementPage";
+import UserManagementPage from "./Components/UsersAdd/UserManagementPage";
+import UserAssociation from "./Components/UserAssociation/UserAssociation";
 import { InactivityHandler } from "./Components/Datafetching/InactivityHandler";
 
 function App() {
@@ -38,6 +40,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DocumentManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Incubation/Dashboard/Usermanagement"
+              element={
+                <ProtectedRoute>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Incubation/Dashboard/Userassociation"
+              element={
+                <ProtectedRoute>
+                  <UserAssociation />
                 </ProtectedRoute>
               }
             />

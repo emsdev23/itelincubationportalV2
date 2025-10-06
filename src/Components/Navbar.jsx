@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Navbar.module.css";
-import { Plus, X, LogOut, CircleUserRound, FolderDown } from "lucide-react";
+import { UserRound, X, LogOut, CircleUserRound, FolderDown } from "lucide-react";
 import ITELLogo from "../assets/ITEL_Logo.png";
 import MetricCardDashboard from "./MetricCardDashboard";
 import CompanyFieldChart from "./CompanyFieldChart";
@@ -21,6 +21,7 @@ const Navbar = () => {
     companyDoc,
     listOfIncubatees,
     clearAllData,
+    roleid  // Get roleid from context
   } = useContext(DataContext);
   const navigate = useNavigate();
 
@@ -67,7 +68,7 @@ const Navbar = () => {
 
       // Call logout API
       const response = await fetch(
-        "http://121.242.232.212:8086/itelinc/resources/auth/logout",
+        "http://121.242.232.212:8089/itelinc/resources/auth/logout",
         {
           method: "POST",
           headers: {
@@ -104,11 +105,14 @@ const Navbar = () => {
 
   //get data form session storage
   const userid = JSON.parse(sessionStorage.getItem("userid"));
-  const roleid = sessionStorage.getItem("roleid");
+  const sessionRoleid = sessionStorage.getItem("roleid"); // Get roleid from sessionStorage
   const token = sessionStorage.getItem("token");
-  console.log(userid, roleid, token);
+  console.log(userid, sessionRoleid, token);
 
-  useEffect(() => {});
+  // Check if user has roleid 3 (Incubator Operator)
+  const isOperator = roleid === "3" || sessionRoleid === "3";
+
+  useEffect(() => {}, []);
   return (
     <div className={styles.dashboard}>
       {/* Header */}
@@ -125,15 +129,44 @@ const Navbar = () => {
 
           {/* Right - Actions */}
           <div className={styles.actions}>
-            <NavLink
-              to="/Incubation/Dashboard/AddDocuments"
-              style={{ textDecoration: "none" }}
-            >
-              <button className={styles.btnPrimary}>
-                <FolderDown className={styles.icon} />
-                Document Management
-              </button>
-            </NavLink>
+            {/* Only show User Management button if roleid is not 3 */}
+            {!isOperator && (
+              <NavLink
+                to="/Incubation/Dashboard/Usermanagement"
+                style={{ textDecoration: "none" }}
+              >
+                <button className={styles.btnPrimary}>
+                  <UserRound className={styles.icon} />
+                  User Management
+                </button>
+              </NavLink>
+            )}
+
+            {/* Only show User Management button if roleid is not 3 */}
+            {!isOperator && (
+              <NavLink
+                to="/Incubation/Dashboard/Userassociation"
+                style={{ textDecoration: "none" }}
+              >
+                <button className={styles.btnPrimary}>
+                  <UserRound className={styles.icon} />
+                  User Association
+                </button>
+              </NavLink>
+            )}
+
+            {/* Only show Document Management button if roleid is not 3 */}
+            {!isOperator && (
+              <NavLink
+                to="/Incubation/Dashboard/AddDocuments"
+                style={{ textDecoration: "none" }}
+              >
+                <button className={styles.btnPrimary}>
+                  <FolderDown className={styles.icon} />
+                  Document Management
+                </button>
+              </NavLink>
+            )}
 
             {/* <button
               className={styles.btnPrimary}

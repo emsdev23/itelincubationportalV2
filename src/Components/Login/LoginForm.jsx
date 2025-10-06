@@ -59,6 +59,15 @@ const LoginForm = () => {
           showConfirmButton: false,
         });
         setTimeout(() => navigate("/Incubation/Dashboard"), 1000);
+      } else if (roleid === "3") {
+        Swal.fire({
+          icon: "success",
+          title: "Welcome Incubator Operator!",
+          text: "Redirecting...",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        setTimeout(() => navigate("/Incubation/Dashboard"), 1000);
       } else if (roleid === "4") {
         Swal.fire({
           icon: "success",

@@ -6,6 +6,7 @@ import { FaTrash,FaEdit } from "react-icons/fa";
 export default function DocumentsTable() {
   const userId = sessionStorage.getItem("userid");
   const token = sessionStorage.getItem("token");
+  const IP = "http://121.242.232.212:8089/itelinc"
 
   const [documents, setDocuments] = useState([]);
   const [cats, setCats] = useState([]);
@@ -27,7 +28,7 @@ export default function DocumentsTable() {
   const fetchDocuments = () => {
     setLoading(true);
     setError(null);
-    fetch("http://121.242.232.212:8086/itelinc/getDocumentsAll", {
+    fetch(`${IP}/getDocumentsAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/json" },
@@ -46,7 +47,7 @@ export default function DocumentsTable() {
 
   // ✅ Fetch categories independently
   const fetchCategories = () => {
-    fetch("http://121.242.232.212:8086/itelinc/getDoccatAll", {
+    fetch(`${IP}/itelinc/getDoccatAll`, {
       method: "GET",
       mode: "cors",
     })
@@ -62,7 +63,7 @@ export default function DocumentsTable() {
 
   // ✅ Fetch subcategories independently
   const fetchSubCategories = () => {
-    fetch("http://121.242.232.212:8086/itelinc/getDocsubcatAll", {
+    fetch(`${IP}/itelinc/getDocsubcatAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -173,7 +174,7 @@ export default function DocumentsTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        const url = `http://121.242.232.212:8086/itelinc/deleteDocumentDetails?documentsrecid=${docId}&documentmodifiedby=${
+        const url = `${IP}/deleteDocumentDetails?documentsrecid=${docId}&documentmodifiedby=${
           userId || "32"
         }`;
 
@@ -265,8 +266,8 @@ export default function DocumentsTable() {
     }
 
     const baseUrl = editDoc
-      ? "http://121.242.232.212:8086/itelinc/updateDocumentDetails"
-      : "http://121.242.232.212:8086/itelinc/addDocumentDetails";
+      ? `${IP}/updateDocumentDetails`
+      : `${IP}/addDocumentDetails`;
 
     const url = `${baseUrl}?${params.toString()}`;
     

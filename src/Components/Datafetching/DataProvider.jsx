@@ -19,13 +19,27 @@ export const DataProvider = ({ children }) => {
   const [adminViewingStartupId, setAdminViewingStartupId] = useState(null);
   const [adminStartupLoading, setAdminStartupLoading] = useState(false);
 
-  const [userid, setUserid] = useState(
+  // Initialize state from sessionStorage
+  const [userid, setUseridState] = useState(
     sessionStorage.getItem("userid") || null
   );
 
-  const [roleid, setroleid] = useState(
+  const [roleid, setroleidState] = useState(
     sessionStorage.getItem("roleid") || null
   );
+
+  // Create proper setters that update sessionStorage
+  const setUserid = (id) => {
+    const idString = id ? String(id) : null;
+    sessionStorage.setItem("userid", idString);
+    setUseridState(idString);
+  };
+
+  const setroleid = (id) => {
+    const idString = id ? String(id) : null;
+    sessionStorage.setItem("roleid", idString);
+    setroleidState(idString);
+  };
 
   const [fromYear, setFromYear] = useState("2025");
   const [toYear, setToYear] = useState("2026");
@@ -177,9 +191,53 @@ export const DataProvider = ({ children }) => {
     }
   }, [userid, roleid]);
 
+  // Effect to sync with sessionStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // Check if the change is for userid or roleid
+      if (e.key === 'userid' || e.key === 'roleid' || !e.key) {
+        const sessionUserid = sessionStorage.getItem("userid");
+        const sessionRoleid = sessionStorage.getItem("roleid");
+        
+        if (sessionUserid !== userid) {
+          setUseridState(sessionUserid);
+        }
+        
+        if (sessionRoleid !== roleid) {
+          setroleidState(sessionRoleid);
+        }
+      }
+    };
+
+    // Listen for storage events (for changes in other tabs/windows)
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Check immediately on mount
+    handleStorageChange(new Event('storage'));
+    
+    // Set up an interval to check for sessionStorage changes
+    const intervalId = setInterval(() => {
+      const sessionUserid = sessionStorage.getItem("userid");
+      const sessionRoleid = sessionStorage.getItem("roleid");
+      
+      if (sessionUserid !== userid) {
+        setUseridState(sessionUserid);
+      }
+      
+      if (sessionRoleid !== roleid) {
+        setroleidState(sessionRoleid);
+      }
+    }, 500); // Check every 500ms
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, [userid, roleid]);
+
   // General data fetch (for admin/users)
   useEffect(() => {
-    if (!userid) return;
+    if (!userid || !roleid) return;
 
     // Skip general fetch if admin is viewing specific startup
     if (adminViewingStartupId) return;
