@@ -406,12 +406,12 @@ export default function DocumentsTable() {
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(doc)}>
-                        <FaEdit color="white" size={18} />
+                        <FaEdit size={18} />
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(doc.documentsrecid)}>
-                        <FaTrash color="white" size={18} />
+                        <FaTrash size={18} />
                       </button>
                     </td>
                   </tr>
