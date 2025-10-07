@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
-import { FaTrash, FaEdit, FaPlus, FaSpinner } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
 
 export default function DocCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -17,19 +17,18 @@ export default function DocCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const IP = "http://121.242.232.212:8089/itelinc";
   
-  // Loading states for operations
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  // New loading states for specific operations
+  const [isDeleting, setIsDeleting] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   // ✅ Fetch all categories
+  const IP = "http://121.242.232.212:8089"
   const fetchCategories = () => {
     setLoading(true);
     setError(null);
 
-    fetch(`${IP}/getDoccatAll`, {
+    fetch(`${IP}/itelinc/getDoccatAll`, {
       method: "GET",
       mode: "cors",
     })
@@ -57,7 +56,6 @@ export default function DocCatTable() {
   };
 
   const openEditModal = (cat) => {
-    setEditingId(cat.doccatrecid);
     setEditCat(cat);
     setFormData({
       doccatname: cat.doccatname || "",
@@ -71,7 +69,7 @@ export default function DocCatTable() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Delete with SweetAlert and loading state
+  // ✅ Delete with SweetAlert and loading popup
   const handleDelete = (catId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -82,8 +80,22 @@ export default function DocCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        setDeletingId(catId);
-        const deleteUrl = `${IP}/deletedoccat?doccatrecid=${catId}&doccatmodifiedby=${userId}`;
+        // Set loading state for this specific category
+        setIsDeleting(prev => ({ ...prev, [catId]: true }));
+        
+        // Show loading popup
+        Swal.fire({
+          title: "Deleting...",
+          text: "Please wait while we delete the category",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        const deleteUrl = `${IP}/itelinc/deletedoccat?doccatrecid=${catId}&doccatmodifiedby=${userId}`;
 
         fetch(deleteUrl, {
           method: "POST",
@@ -111,24 +123,45 @@ export default function DocCatTable() {
             Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
           })
           .finally(() => {
-            setDeletingId(null);
+            // Remove loading state for this category
+            setIsDeleting(prev => ({ ...prev, [catId]: false }));
           });
       }
     });
   };
 
-  // ✅ FIXED: Add/Update with proper URL encoding and loading state
+  // ✅ FIXED: Add/Update with proper URL encoding and loading popup
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSaving(true);
     setError(null);
 
     // Validate form data
     if (!formData.doccatname.trim() || !formData.doccatdescription.trim()) {
       setError("Category name and description are required");
-      setIsSubmitting(false);
+      setIsSaving(false);
       return;
     }
+
+    // Close the modal before showing the loading popup
+    setIsModalOpen(false);
+
+    // Show loading popup
+    const loadingTitle = editCat ? "Updating..." : "Saving...";
+    const loadingText = editCat 
+      ? "Please wait while we update the category" 
+      : "Please wait while we save the category";
+    
+    Swal.fire({
+      title: loadingTitle,
+      text: loadingText,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     // Build URL parameters safely
     const params = new URLSearchParams();
@@ -148,8 +181,8 @@ export default function DocCatTable() {
     }
 
     const baseUrl = editCat
-      ? `${IP}/updateDoccat`
-      : `${IP}/addDoccat`;
+      ? `${IP}/itelinc/updateDoccat`
+      : `${IP}/itelinc/addDoccat`;
 
     const url = `${baseUrl}?${params.toString()}`;
 
@@ -179,11 +212,12 @@ export default function DocCatTable() {
             data.data.includes("Duplicate entry")
           ) {
             setError("Category name already exists");
-            Swal.fire("Duplicate", "Category name already exists!", "warning");
+            Swal.fire("Duplicate", "Category name already exists!", "warning").then(() => {
+              // Reopen the modal if there's a duplicate error
+              setIsModalOpen(true);
+            });
           } else {
-            setIsModalOpen(false);
             setEditCat(null);
-            setEditingId(null);
             setFormData({ doccatname: "", doccatdescription: "" });
             fetchCategories();
             Swal.fire(
@@ -201,28 +235,20 @@ export default function DocCatTable() {
       .catch((err) => {
         console.error("Error saving category:", err);
         setError(`Failed to save: ${err.message}`);
-        Swal.fire("Error", `Failed to save category: ${err.message}`, "error");
+        Swal.fire("Error", `Failed to save category: ${err.message}`, "error").then(() => {
+          // Reopen the modal if there's an error
+          setIsModalOpen(true);
+        });
       })
-      .finally(() => {
-        setIsSubmitting(false);
-        setEditingId(null);
-      });
+      .finally(() => setIsSaving(false));
   };
 
   return (
     <div className="doccat-container">
       <div className="doccat-header">
         <h2 className="doccat-title">📂 Document Categories</h2>
-        <button className="btn-add-category" onClick={openAddModal} disabled={isAdding}>
-          {isAdding ? (
-            <>
-              <FaSpinner className="spinner" size={16} /> Adding...
-            </>
-          ) : (
-            <>
-              <FaPlus size={16} /> Add Category
-            </>
-          )}
+        <button className="btn-add-category" onClick={openAddModal}>
+          + Add Category
         </button>
       </div>
 
@@ -257,9 +283,7 @@ export default function DocCatTable() {
                         ? cat.doccatcreatedby
                         : "Admin"}
                     </td>
-                    <td>{cat.doccatcreatedtime.replace("?","") }
-
-                    </td>
+                    <td>{cat.doccatcreatedtime.replace("?","") }</td>
                     <td>
                       {isNaN(cat.doccatmodifiedby)
                         ? cat.doccatmodifiedby
@@ -270,24 +294,16 @@ export default function DocCatTable() {
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(cat)}
-                        disabled={editingId === cat.doccatrecid || deletingId === cat.doccatrecid}
+                        disabled={isSaving} // Disable when saving
                       >
-                        {editingId === cat.doccatrecid ? (
-                          <FaSpinner className="spinner" size={18} />
-                        ) : (
-                          <FaEdit size={18} />
-                        )}
+                        <FaEdit size={18} />
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(cat.doccatrecid)}
-                        disabled={deletingId === cat.doccatrecid || editingId === cat.doccatrecid}
+                        disabled={isDeleting[cat.doccatrecid] || isSaving} // Disable when deleting or saving
                       >
-                        {deletingId === cat.doccatrecid ? (
-                          <FaSpinner className="spinner" size={18} />
-                        ) : (
-                          <FaTrash size={18} />
-                        )}
+                        <FaTrash size={18} />
                       </button>
                     </td>
                   </tr>
@@ -311,27 +327,12 @@ export default function DocCatTable() {
               <h3>{editCat ? "Edit Category" : "Add Category"}</h3>
               <button
                 className="btn-close"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditCat(null);
-                  setEditingId(null);
-                }}
-                disabled={isSubmitting}
+                onClick={() => setIsModalOpen(false)}
+                disabled={isSaving} // Disable when saving
               >
                 &times;
               </button>
             </div>
-            
-            {/* Loading overlay for modal */}
-            {isSubmitting && (
-              <div className="modal-loading-overlay">
-                <div className="modal-loading-spinner">
-                  <FaSpinner className="spinner" size={24} />
-                  <p>{editCat ? "Updating category..." : "Saving category..."}</p>
-                </div>
-              </div>
-            )}
-            
             <form className="doccat-form" onSubmit={handleSubmit}>
               <label>
                 Category Name *
@@ -342,7 +343,7 @@ export default function DocCatTable() {
                   onChange={handleChange}
                   required
                   placeholder="Enter category name"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
               <label>
@@ -354,7 +355,7 @@ export default function DocCatTable() {
                   required
                   placeholder="Enter category description"
                   rows="3"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
 
@@ -364,47 +365,20 @@ export default function DocCatTable() {
                 <button
                   type="button"
                   className="btn-cancel"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditCat(null);
-                    setEditingId(null);
-                  }}
-                  disabled={isSubmitting}
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSaving} // Disable when saving
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="btn-save"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 >
-                  {isSubmitting ? (
-                    <>
-                      <FaSpinner className="spinner" size={14} /> 
-                      {editCat ? "Updating..." : "Saving..."}
-                    </>
-                  ) : (
-                    editCat ? "Update" : "Save"
-                  )}
+                  {editCat ? "Update" : "Save"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-      
-      {/* Loading overlay for operations */}
-      {(isAdding || editingId !== null || deletingId !== null) && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">
-            <FaSpinner className="spinner" size={40} />
-            <p>
-              {isAdding 
-                ? "Adding category..." 
-                : editingId !== null 
-                  ? "Updating category..." 
-                  : "Deleting category..."}
-            </p>
           </div>
         </div>
       )}

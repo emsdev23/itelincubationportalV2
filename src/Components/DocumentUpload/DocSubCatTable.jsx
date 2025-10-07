@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
-import { FaTrash, FaEdit, FaPlus, FaSpinner } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
+import { FaT } from "react-icons/fa6";
 
 export default function DocSubCatTable() {
   const userId = sessionStorage.getItem("userid");
@@ -19,17 +20,17 @@ export default function DocSubCatTable() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const IP = "http://121.242.232.212:8089/itelinc";
+  const IP = "http://121.242.232.212:8089"
   
-  // Loading states for operations
-  const [isDeleting, setIsDeleting] = useState(null); // Store subcategory ID being deleted
-  const [isEditing, setIsEditing] = useState(null); // Store subcategory ID being edited
+  // New loading states for specific operations
+  const [isDeleting, setIsDeleting] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch all subcategories
   const fetchSubCategories = () => {
     setLoading(true);
     setError(null);
-    fetch(`${IP}/getDocsubcatAll`, {
+    fetch(`${IP}/itelinc/getDocsubcatAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -48,7 +49,7 @@ export default function DocSubCatTable() {
 
   // Fetch categories for dropdown
   const fetchCategories = () => {
-    fetch(`${IP}/getDoccatAll`, {
+    fetch(`${IP}/itelinc/getDoccatAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -82,7 +83,6 @@ export default function DocSubCatTable() {
   };
 
   const openEditModal = (subcat) => {
-    setIsEditing(subcat.docsubcatrecid);
     setEditSubCat(subcat);
     setFormData({
       docsubcatname: subcat.docsubcatname || "",
@@ -99,7 +99,7 @@ export default function DocSubCatTable() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Improved Delete with SweetAlert and loading state
+  // ✅ Improved Delete with SweetAlert and loading popup
   const handleDelete = (subcatId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -110,8 +110,22 @@ export default function DocSubCatTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        setIsDeleting(subcatId);
-        const deleteUrl = `${IP}/deleteDocsubcat?docsubcatrecid=${subcatId}&docsubcatmodifiedby=${
+        // Set loading state for this specific subcategory
+        setIsDeleting(prev => ({ ...prev, [subcatId]: true }));
+        
+        // Show loading popup
+        Swal.fire({
+          title: "Deleting...",
+          text: "Please wait while we delete the subcategory",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        const deleteUrl = `${IP}/itelinc/deleteDocsubcat?docsubcatrecid=${subcatId}&docsubcatmodifiedby=${
           userId || "32"
         }`;
 
@@ -141,16 +155,17 @@ export default function DocSubCatTable() {
             Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
           })
           .finally(() => {
-            setIsDeleting(null);
+            // Remove loading state for this subcategory
+            setIsDeleting(prev => ({ ...prev, [subcatId]: false }));
           });
       }
     });
   };
 
-  // ✅ FIXED: Add/Update with proper URL parameters and loading state
+  // ✅ FIXED: Add/Update with proper URL parameters and loading popup
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSaving(true);
     setError(null);
 
     // Validate form data
@@ -160,9 +175,29 @@ export default function DocSubCatTable() {
       !formData.docsubcatscatrecid
     ) {
       setError("All fields are required");
-      setIsSubmitting(false);
+      setIsSaving(false);
       return;
     }
+
+    // Close the modal before showing the loading popup
+    setIsModalOpen(false);
+
+    // Show loading popup
+    const loadingTitle = editSubCat ? "Updating..." : "Saving...";
+    const loadingText = editSubCat 
+      ? "Please wait while we update the subcategory" 
+      : "Please wait while we save the subcategory";
+    
+    Swal.fire({
+      title: loadingTitle,
+      text: loadingText,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     // Build URL parameters safely
     const params = new URLSearchParams();
@@ -184,8 +219,8 @@ export default function DocSubCatTable() {
     }
 
     const baseUrl = editSubCat
-      ? `${IP}/updateDocsubcat`
-      : `${IP}/addDocsubcat`;
+      ? `${IP}/itelinc/updateDocsubcat`
+      : `${IP}/itelinc/addDocsubcat`;
 
     const url = `${baseUrl}?${params.toString()}`;
 
@@ -221,11 +256,12 @@ export default function DocSubCatTable() {
               "Duplicate",
               "Subcategory name already exists for this category!",
               "warning"
-            );
+            ).then(() => {
+              // Reopen the modal if there's a duplicate error
+              setIsModalOpen(true);
+            });
           } else {
-            setIsModalOpen(false);
             setEditSubCat(null);
-            setIsEditing(null);
             setFormData({
               docsubcatname: "",
               docsubcatdescription: "",
@@ -251,28 +287,20 @@ export default function DocSubCatTable() {
           "Error",
           `Failed to save subcategory: ${err.message}`,
           "error"
-        );
+        ).then(() => {
+          // Reopen the modal if there's an error
+          setIsModalOpen(true);
+        });
       })
-      .finally(() => {
-        setIsSubmitting(false);
-        setIsEditing(null);
-      });
+      .finally(() => setIsSaving(false));
   };
 
   return (
     <div className="doccat-container">
       <div className="doccat-header">
         <h2 className="doccat-title">📂 Document Subcategories</h2>
-        <button className="btn-add-category" onClick={openAddModal} disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <FaSpinner className="spinner" size={16} /> Adding...
-            </>
-          ) : (
-            <>
-              <FaPlus size={16} /> Add Subcategory
-            </>
-          )}
+        <button className="btn-add-category" onClick={openAddModal}>
+          + Add Subcategory
         </button>
       </div>
 
@@ -339,24 +367,16 @@ export default function DocSubCatTable() {
                       <button
                         className="btn-edit"
                         onClick={() => openEditModal(subcat)}
-                        disabled={isDeleting === subcat.docsubcatrecid || isSubmitting}
+                        disabled={isSaving} // Disable when saving
                       >
-                        {isEditing === subcat.docsubcatrecid ? (
-                          <FaSpinner className="spinner" size={18} />
-                        ) : (
-                          <FaEdit size={18} />
-                        )}
+                        <FaEdit size={18}/>
                       </button>
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(subcat.docsubcatrecid)}
-                        disabled={isDeleting === subcat.docsubcatrecid || isEditing === subcat.docsubcatrecid}
+                        disabled={isDeleting[subcat.docsubcatrecid] || isSaving} // Disable when deleting or saving
                       >
-                        {isDeleting === subcat.docsubcatrecid ? (
-                          <FaSpinner className="spinner" size={18} />
-                        ) : (
-                          <FaTrash size={18} />
-                        )}
+                        <FaTrash size={18}/>
                       </button>
                     </td>
                   </tr>
@@ -380,27 +400,12 @@ export default function DocSubCatTable() {
               <h3>{editSubCat ? "Edit Subcategory" : "Add Subcategory"}</h3>
               <button
                 className="btn-close"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditSubCat(null);
-                  setIsEditing(null);
-                }}
-                disabled={isSubmitting}
+                onClick={() => setIsModalOpen(false)}
+                disabled={isSaving} // Disable when saving
               >
                 &times;
               </button>
             </div>
-            
-            {/* Loading overlay for modal */}
-            {isSubmitting && (
-              <div className="modal-loading-overlay">
-                <div className="modal-loading-spinner">
-                  <FaSpinner className="spinner" size={24} />
-                  <p>{editSubCat ? "Updating subcategory..." : "Saving subcategory..."}</p>
-                </div>
-              </div>
-            )}
-            
             <form className="doccat-form" onSubmit={handleSubmit}>
               <label>
                 Category *
@@ -409,7 +414,7 @@ export default function DocSubCatTable() {
                   value={formData.docsubcatscatrecid}
                   onChange={handleChange}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 >
                   <option value="">Select Category</option>
                   {cats.map((cat) => (
@@ -428,7 +433,7 @@ export default function DocSubCatTable() {
                   onChange={handleChange}
                   required
                   placeholder="Enter subcategory name"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
               <label>
@@ -440,7 +445,7 @@ export default function DocSubCatTable() {
                   required
                   placeholder="Enter subcategory description"
                   rows="3"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
               {error && <div className="modal-error-message">{error}</div>}
@@ -448,45 +453,20 @@ export default function DocSubCatTable() {
                 <button
                   type="button"
                   className="btn-cancel"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditSubCat(null);
-                    setIsEditing(null);
-                  }}
-                  disabled={isSubmitting}
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSaving} // Disable when saving
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="btn-save"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 >
-                  {isSubmitting ? (
-                    <>
-                      <FaSpinner className="spinner" size={14} /> 
-                      {editSubCat ? "Updating..." : "Saving..."}
-                    </>
-                  ) : (
-                    editSubCat ? "Update" : "Save"
-                  )}
+                  {editSubCat ? "Update" : "Save"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-      
-      {/* Loading overlay for operations */}
-      {(isSubmitting || isDeleting !== null) && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">
-            <FaSpinner className="spinner" size={40} />
-            <p>
-              {isSubmitting 
-                ? (editSubCat ? "Updating subcategory..." : "Saving subcategory...")
-                : "Deleting subcategory..."}
-            </p>
           </div>
         </div>
       )}

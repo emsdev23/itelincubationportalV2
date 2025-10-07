@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "./DocCatTable.css";
-import { FaTrash,FaEdit } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
 
 export default function DocumentsTable() {
   const userId = sessionStorage.getItem("userid");
   const token = sessionStorage.getItem("token");
-  const IP = "http://121.242.232.212:8089/itelinc"
 
   const [documents, setDocuments] = useState([]);
   const [cats, setCats] = useState([]);
@@ -24,11 +23,16 @@ export default function DocumentsTable() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // New loading states for specific operations
+  const [isDeleting, setIsDeleting] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+
   // ✅ Fetch documents
+  const IP = "http://121.242.232.212:8089"
   const fetchDocuments = () => {
     setLoading(true);
     setError(null);
-    fetch(`${IP}/getDocumentsAll`, {
+    fetch(`${IP}/itelinc/getDocumentsAll`, {
       method: "GET",
       mode: "cors",
       headers: { "Content-Type": "application/json" },
@@ -163,7 +167,7 @@ export default function DocumentsTable() {
     }
   };
 
-  // ✅ Delete with SweetAlert
+  // ✅ Delete with SweetAlert and loading popup
   const handleDelete = (docId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -174,7 +178,22 @@ export default function DocumentsTable() {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        const url = `${IP}/deleteDocumentDetails?documentsrecid=${docId}&documentmodifiedby=${
+        // Set loading state for this specific document
+        setIsDeleting(prev => ({ ...prev, [docId]: true }));
+        
+        // Show loading popup
+        Swal.fire({
+          title: "Deleting...",
+          text: "Please wait while we delete the document",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        const url = `${IP}/itelinc/deleteDocumentDetails?documentsrecid=${docId}&documentmodifiedby=${
           userId || "32"
         }`;
 
@@ -202,15 +221,19 @@ export default function DocumentsTable() {
           .catch((err) => {
             console.error("Error deleting document:", err);
             Swal.fire("Error", `Failed to delete: ${err.message}`, "error");
+          })
+          .finally(() => {
+            // Remove loading state for this document
+            setIsDeleting(prev => ({ ...prev, [docId]: false }));
           });
       }
     });
   };
 
-  // ✅ Add / Update Document
+  // ✅ Add / Update Document with loading popup
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSaving(true);
     setError(null);
 
     // Validate
@@ -222,7 +245,7 @@ export default function DocumentsTable() {
       !formData.documentperiodicityrecid
     ) {
       setError("All fields are required");
-      setIsSubmitting(false);
+      setIsSaving(false);
       return;
     }
 
@@ -239,12 +262,32 @@ export default function DocumentsTable() {
       } else {
         console.error("Could not find subcategory by name:", formData.documentsubcatrecid);
         setError("Invalid subcategory selected");
-        setIsSubmitting(false);
+        setIsSaving(false);
         return;
       }
     } else {
       console.log("Subcategory value is numeric, using as ID:", subcatId);
     }
+
+    // Close the modal before showing the loading popup
+    setIsModalOpen(false);
+
+    // Show loading popup
+    const loadingTitle = editDoc ? "Updating..." : "Saving...";
+    const loadingText = editDoc 
+      ? "Please wait while we update the document" 
+      : "Please wait while we save the document";
+    
+    Swal.fire({
+      title: loadingTitle,
+      text: loadingText,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     const params = new URLSearchParams();
     if (editDoc) {
@@ -266,8 +309,8 @@ export default function DocumentsTable() {
     }
 
     const baseUrl = editDoc
-      ? `${IP}/updateDocumentDetails`
-      : `${IP}/addDocumentDetails`;
+      ? `${IP}/itelinc/updateDocumentDetails`
+      : `${IP}/itelinc/addDocumentDetails`;
 
     const url = `${baseUrl}?${params.toString()}`;
     
@@ -296,9 +339,11 @@ export default function DocumentsTable() {
             data.data.includes("documents.unique_document_active")
           ) {
             setError("Document already exists");
-            Swal.fire("Duplicate", "Document already exists!", "warning");
+            Swal.fire("Duplicate", "Document already exists!", "warning").then(() => {
+              // Reopen the modal if there's a duplicate error
+              setIsModalOpen(true);
+            });
           } else {
-            setIsModalOpen(false);
             setEditDoc(null);
             refreshData();
             Swal.fire(
@@ -314,9 +359,12 @@ export default function DocumentsTable() {
       .catch((err) => {
         console.error("Error saving document:", err);
         setError(`Failed to save: ${err.message}`);
-        Swal.fire("Error", `Failed to save: ${err.message}`, "error");
+        Swal.fire("Error", `Failed to save: ${err.message}`, "error").then(() => {
+          // Reopen the modal if there's an error
+          setIsModalOpen(true);
+        });
       })
-      .finally(() => setIsSubmitting(false));
+      .finally(() => setIsSaving(false));
   };
 
   // ✅ NEW: Add a function to get filtered subcategories for debugging
@@ -405,12 +453,16 @@ export default function DocumentsTable() {
                     <td>
                       <button
                         className="btn-edit"
-                        onClick={() => openEditModal(doc)}>
+                        onClick={() => openEditModal(doc)}
+                        disabled={isSaving} // Disable when saving
+                      >
                         <FaEdit size={18} />
                       </button>
                       <button
                         className="btn-delete"
-                        onClick={() => handleDelete(doc.documentsrecid)}>
+                        onClick={() => handleDelete(doc.documentsrecid)}
+                        disabled={isDeleting[doc.documentsrecid] || isSaving} // Disable when deleting or saving
+                      >
                         <FaTrash size={18} />
                       </button>
                     </td>
@@ -436,6 +488,7 @@ export default function DocumentsTable() {
               <button
                 className="btn-close"
                 onClick={() => setIsModalOpen(false)}
+                disabled={isSaving} // Disable when saving
               >
                 &times;
               </button>
@@ -448,6 +501,7 @@ export default function DocumentsTable() {
                   value={formData.documentcatrecid}
                   onChange={handleChange}
                   required
+                  disabled={isSaving} // Disable when saving
                 >
                   <option value="">Select Category</option>
                   {cats.map((cat) => (
@@ -465,7 +519,7 @@ export default function DocumentsTable() {
                   value={formData.documentsubcatrecid}
                   onChange={handleChange}
                   required
-                  disabled={!formData.documentcatrecid}
+                  disabled={!formData.documentcatrecid || isSaving} // Disable when no category or when saving
                 >
                   <option value="">Select Subcategory</option>
                   {getFilteredSubcategories().map((sc) => (
@@ -486,6 +540,7 @@ export default function DocumentsTable() {
                   value={formData.documentperiodicityrecid}
                   onChange={handleChange}
                   required
+                  disabled={isSaving} // Disable when saving
                 >
                   <option value="">Select Periodicity</option>
                   <option value="1">One-time</option>
@@ -503,6 +558,7 @@ export default function DocumentsTable() {
                   value={formData.documentname}
                   onChange={handleChange}
                   required
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
 
@@ -514,6 +570,7 @@ export default function DocumentsTable() {
                   onChange={handleChange}
                   required
                   rows="3"
+                  disabled={isSaving} // Disable when saving
                 />
               </label>
 
@@ -524,16 +581,16 @@ export default function DocumentsTable() {
                   type="button"
                   className="btn-cancel"
                   onClick={() => setIsModalOpen(false)}
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="btn-save"
-                  disabled={isSubmitting}
+                  disabled={isSaving} // Disable when saving
                 >
-                  {isSubmitting ? "Saving..." : editDoc ? "Update" : "Save"}
+                  {editDoc ? "Update" : "Save"}
                 </button>
               </div>
             </form>
